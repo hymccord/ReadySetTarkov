@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using ReadySetTarkov.LogReader.Handlers;
 using ReadySetTarkov.Utility;
 
 namespace ReadySetTarkov.LogReader
@@ -34,9 +36,13 @@ namespace ReadySetTarkov.LogReader
         public async Task Start(Game game)
         {
             //if (!Helper.TarkovDirExists)
-            await FindTarkov();
+                await FindTarkov();
             InitializeGameState(game);
             _stop = false;
+
+            if (string.IsNullOrEmpty(_logsDir))
+                throw new InvalidOperationException("Could not find tarkov's logs directory.");
+
             //var logDirectory = Path.Combine(Config.Instance.TarkovDirectory, Config.Instance.TarkovLogsDirectoryName);
             _logWatcher.Start(_logsDir);
         }

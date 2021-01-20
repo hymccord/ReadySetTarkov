@@ -1,10 +1,8 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-using ReadySetTarkov.LogReader;
 using ReadySetTarkov.Utility;
 
-namespace ReadySetTarkov
+namespace ReadySetTarkov.LogReader.Handlers
 {
     internal class ApplicationHandler
     {
