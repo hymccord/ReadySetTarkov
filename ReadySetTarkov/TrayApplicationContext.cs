@@ -40,6 +40,7 @@ namespace ReadySetTarkov
             }
             finally
             {
+                _notifyIcon.Visible = false;
                 Application.Exit();
             }
         }
