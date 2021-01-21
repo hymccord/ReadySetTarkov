@@ -14,9 +14,10 @@ namespace ReadySetTarkov.LogReader
     {
         private readonly ApplicationHandler _applicationLineHandler = new ApplicationHandler();
         private readonly LogWatcher _logWatcher;
+        private FileSystemWatcher? _fileSystemWatcher;
         private bool _stop;
         private Game? _game;
-        private string? _logsDir;
+        private string? _currentGameLogDir;
 
         public static LogWatcherInfo ApplicationLogWatcherInfo => new LogWatcherInfo("application");
         public LogWatcherManager()
@@ -35,47 +36,50 @@ namespace ReadySetTarkov.LogReader
 
         public async Task Start(Game game)
         {
-            //if (!Helper.TarkovDirExists)
-                await FindTarkov();
+            await FindTarkov();
             InitializeGameState(game);
+            // Even though the game has started, the latest logs folder could not be created yet
+            StartDirectoryWatcher(game);
             _stop = false;
 
-            if (string.IsNullOrEmpty(_logsDir))
+            if (string.IsNullOrEmpty(_currentGameLogDir))
                 throw new InvalidOperationException("Could not find tarkov's logs directory.");
 
-            //var logDirectory = Path.Combine(Config.Instance.TarkovDirectory, Config.Instance.TarkovLogsDirectoryName);
-            _logWatcher.Start(_logsDir);
+            _logWatcher.Start(_currentGameLogDir);
         }
 
-        private async Task FindTarkov()
+        private static async Task FindTarkov()
         {
             //Log.Warn("Tarkov not found, waiting for process...");
-            Process? proc;
-            while ((proc = User32.GetTarkovProc()) == null)
+            while (User32.GetTarkovProc() == null)
                 await Task.Delay(500);
-            var dir = new FileInfo(User32.GetProcessFilename(proc)).Directory?.FullName;
-
-            if (dir == null)
-            {
-                //const string msg = "Could not find Tarkov installation";
-                //Log.Error(msg);
-                //ErrorManager.AddError(msg, "Please point HDT to your Tarkov installation via 'options > tracker > settings > set Tarkov path'.");
-                return;
-            }
-            _logsDir = Directory.GetDirectories(Path.Combine(dir, "Logs")).Select(s => new DirectoryInfo(s)).OrderByDescending(di => di.CreationTime).First().FullName;
-            //Config.Instance.TarkovDirectory = dir;
-            //Config.Save();
         }
 
         public async Task<bool> Stop(bool force = false)
         {
             _stop = true;
+            if (_fileSystemWatcher != null)
+                _fileSystemWatcher.EnableRaisingEvents = false;
             return await _logWatcher.Stop(force);
         }
 
         private void InitializeGameState(Game game)
         {
             _game = game;
+            Process? proc = User32.GetTarkovProc();
+
+            if (proc == null)
+                return;
+
+            var dir = new FileInfo(User32.GetProcessFilename(proc)).Directory?.FullName;
+
+            if (dir == null)
+            {
+                return;
+            }
+
+            game.GameDirectory = dir;
+            _currentGameLogDir = GetNewestSubdirectory(game.LogsDirectory!);
         }
 
         private void OnNewLines(List<LogLine> lines)
@@ -93,6 +97,30 @@ namespace ReadySetTarkov.LogReader
                 }
             }
             //Helper.UpdateEverything(_game);
+        }
+
+        private static string GetNewestSubdirectory(string directory)
+        {
+            return Directory.GetDirectories(directory).Select(s => new DirectoryInfo(s)).OrderByDescending(di => di.CreationTime).First().FullName;
+        }
+
+        private void StartDirectoryWatcher(Game game)
+        {
+            _fileSystemWatcher = new FileSystemWatcher(game.LogsDirectory!)
+            {
+                NotifyFilter = NotifyFilters.DirectoryName
+            };
+            _fileSystemWatcher.Created += async (s, e) =>
+            {
+                _fileSystemWatcher.EnableRaisingEvents = false;
+
+                if (_game != null)
+                {
+                    await Stop();
+                    await Start(game);
+                }
+            };
+            _fileSystemWatcher.EnableRaisingEvents = true;
         }
     }
 }
