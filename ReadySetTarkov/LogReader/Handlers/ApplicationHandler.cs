@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Media;
+using System.Text.RegularExpressions;
 
 using ReadySetTarkov.Utility;
 
@@ -23,6 +24,8 @@ namespace ReadySetTarkov.LogReader.Handlers
                 {
                     case "Starting":
                         User32.FlashTarkov();
+                        var player = new SoundPlayer(Properties.Resources.ready);
+                        player.Play();
                         break;
                     case "Start":
                         //User32.BringTarkovToForeground();
