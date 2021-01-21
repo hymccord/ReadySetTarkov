@@ -14,6 +14,6 @@ All pinvoke calls are in the file `User32.cs`. You can browse that to see how I 
 
 ### Possible Future Features
 
-- Sound notification (with customization)
+- Sound customization
 - Swap foreground window on player spawn
 - Toast notifications
