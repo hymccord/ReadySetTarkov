@@ -16,7 +16,7 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Build
-      run: dotnet publish -r win-x64 -o publish -c Release -p:PublishSingleFile=true --self-contained true -p:PublishTrimmed=true -p:TrimMode=Link ReadySetTarkov\ReadySetTarkov.csproj
+      run: dotnet publish -r win-x64 -o publish -c Release -p:PublishSingleFile=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: Zip
       run: Compress-Archive ".\publish\*" -DestinationPath ".\ReadySetTarkov.zip" -CompressionLevel Optimal
     - name: Create Release
