@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,7 +46,7 @@ namespace ReadySetTarkov.LogReader
         public async Task Stop()
         {
             _stop = true;
-            while (_running || _thread == null || _thread.ThreadState == ThreadState.Unstarted)
+            while (_running || _thread == null || _thread.ThreadState == System.Threading.ThreadState.Unstarted)
                 await Task.Delay(50);
             _lines = new ConcurrentQueue<LogLine>();
             await Task.Factory.StartNew(() => _thread?.Join());
@@ -194,42 +193,6 @@ namespace ReadySetTarkov.LogReader
                 }
             }
             return DateTime.MinValue;
-        }
-    }
-
-    public class LogLine
-    {
-        public LogLine(string ns, string line)
-        {
-            Namespace = ns;
-            Line = line;
-            var regex = new Regex(@"^(?<date>.*?)\|(?<gameversion>.*?)\|(?<level>.*?)\|(?<logger>.*?)\|(?<message>.*?)\|.*$");
-            var match = regex.Match(line);
-            if (match.Success)
-            {
-                var ts = match.Groups["date"].Value;
-                if (DateTime.TryParse(ts, out DateTime time))
-                {
-                    Time = time;
-                }
-                LineContent = match.Groups["message"].Value;
-            }
-        }
-
-        public string Namespace { get; set; }
-        public DateTime Time { get; } = DateTime.Now;
-        public string Line { get; set; }
-        public string? LineContent { get; set; }
-    }
-
-    public class LogWatcherInfo
-    {
-        public string Name { get; set; }
-        public bool Reset { get; set; } = true;
-
-        public LogWatcherInfo(string name)
-        {
-            Name = name;
         }
     }
 }
