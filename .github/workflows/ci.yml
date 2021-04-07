@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish -o publish ReadySetTarkov\ReadySetTarkov.csproj
+      run: dotnet publish -r win-x64 -o publish -p:PublishSingleFile=true -p:SelfContained=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: Zip
       run: Compress-Archive ".\publish\*" -DestinationPath ".\ReadySetTarkov.zip" -CompressionLevel Optimal
     - name: 'Upload Artifact'
@@ -32,4 +32,4 @@ jobs:
       with:
         name: ReadySetTarkov
         path: ReadySetTarkov.zip
-        
+
