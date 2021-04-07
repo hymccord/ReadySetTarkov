@@ -23,3 +23,13 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Publish
+      run: dotnet publish -o publish ReadySetTarkov\ReadySetTarkov.csproj
+    - name: Zip
+      run: Compress-Archive ".\publish\*" -DestinationPath ".\ReadySetTarkov.zip" -CompressionLevel Optimal
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: ReadySetTarkov
+        path: ReadySetTarkov.zip
+        
