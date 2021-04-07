@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using ReadySetTarkov.LogReader;
+using ReadySetTarkov.Settings;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
 
@@ -13,35 +14,40 @@ namespace ReadySetTarkov
         private static bool s_resetting;
 
         internal static bool Running { get; set; } = true;
-        public static Game Game { get; set; }
+        public static Game? s_game { get; set; }
 
-        private static Tray tray;
+        private static ISettingsProvider? s_settingsProvider;
+        private static GameEventHandler? s_gameEventHandler;
+        private static Tray? s_tray;
 
         public static bool CanShutdown { get; private set; }
 
 #pragma warning disable 1998
-        public static async Task Initialize()
+        public static async Task Initialize(ISettingsProvider settingsProvider)
 #pragma warning restore 1998
         {
-            tray = new Tray();
-            Game = new Game();
-            s_logWatcherManager = new LogWatcherManager(Game, tray);
+            s_settingsProvider = settingsProvider;
+            s_tray = new Tray(settingsProvider);
+            s_game = new Game();
+            s_gameEventHandler = new GameEventHandler(settingsProvider, s_game);
+            s_logWatcherManager = new LogWatcherManager(s_game, s_tray);
+            
             // Logging
-            _ = UpdateAsync();
+            _ = UpdateAsync().ConfigureAwait(false);
             _ = s_logWatcherManager.Start();
         }
 
         private static async Task UpdateAsync()
         {
-            while (Running)
+            while (s_game != null && Running)
             {
                 if (User32.GetTarkovWindow() != IntPtr.Zero)
                 {
-                    Game.IsRunning = true;
+                    s_game.IsRunning = true;
                 }
-                else if (Game.IsRunning)
+                else if (s_game.IsRunning)
                 {
-                    Game.IsRunning = false;
+                    s_game.IsRunning = false;
                     await Reset();
                 }
                 await Task.Delay(500);
@@ -57,11 +63,14 @@ namespace ReadySetTarkov
                 return;
             }
             s_resetting = true;
-            var stoppedReader = await s_logWatcherManager.Stop();
-            //Game.Reset();
-            await Task.Delay(1000);
-            if (stoppedReader)
-                _ = s_logWatcherManager.Start();
+            
+            if (s_logWatcherManager != null)
+            {
+                var stoppedReader = await s_logWatcherManager.Stop();
+                await Task.Delay(1000);
+                if (stoppedReader)
+                    _ = s_logWatcherManager.Start();
+            }
 
             s_resetting = false;
         }

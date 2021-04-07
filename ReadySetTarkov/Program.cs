@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov
 {
@@ -8,11 +9,6 @@ namespace ReadySetTarkov
         [STAThread]
         static void Main()
         {
-            //Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
-
-            //Application.Run(new TrayApplicationContext());
-
             App application = new App
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown
@@ -23,11 +19,38 @@ namespace ReadySetTarkov
 
     class App : Application
     {
+        private bool _exitHandled = false;
+        private ISettingsProvider settingsProvider;
+
+        public App()
+        {
+            settingsProvider = new SettingsProvider();
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            _ = Core.Initialize();
+            RegisterExitEvents();
+
+            _ = Core.Initialize(settingsProvider);
+        }
+
+        private void RegisterExitEvents()
+        {
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Exiting();
+            Current.Exit += (s, e) => Exiting();
+            Current.SessionEnding += (s, e) => Exiting();
+        }
+
+        private void Exiting()
+        {
+            if (_exitHandled)
+                return;
+
+            settingsProvider.Save();
+
+            _exitHandled = true;
         }
     }
 }

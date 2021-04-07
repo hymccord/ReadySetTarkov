@@ -39,7 +39,11 @@ namespace ReadySetTarkov.LogReader
             _stop = false;
             _offset = 0;
             _logFileExists = false;
-            _thread = new Thread(ReadLogFile) { IsBackground = true };
+            _thread = new Thread(ReadLogFile)
+            { 
+                Name = "Log File Reader",
+                IsBackground = true
+            };
             _thread.Start();
         }
 

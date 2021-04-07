@@ -3,8 +3,10 @@
     enum MatchmakingState
     {
         None,
-        Loading,
+        LoadingData,
+        LoadingMap,
         Matching,
+        CreatingPools,
         Waiting,
         Starting
     }

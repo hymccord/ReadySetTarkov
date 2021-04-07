@@ -1,26 +1,42 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using ReadySetTarkov.Settings;
+
 namespace ReadySetTarkov
 {
-    public class Tray : ITray
+    class Tray : ITray
     {
         private readonly NotifyIcon _notifyIcon;
-        private int _index;
+        private readonly SynchronizationContext _syncContext;
+        private readonly ISettingsProvider _settingsProvider;
         private ToolStripMenuItem _menuItemExit;
         private ToolStripLabel _menuItemStatus;
+        private ToolStripMenuItem _menuItemFlashTaskbar;
+        private ToolStripMenuItem _menuItemPlaySound;
 
         //private Timer _timer;
 
-        public Tray()
+        public Tray(ISettingsProvider _settingsProvider)
         {
+            if (SynchronizationContext.Current == null)
+                throw new InvalidOperationException("This class must be created on the UI thread.");
+
+            _syncContext = SynchronizationContext.Current;
+
             _menuItemExit = new ToolStripMenuItem("Exit", null, TrayClosing);
-            _menuItemStatus = new ToolStripLabel("Status: N/A") { Enabled = false };
+            _menuItemStatus = new ToolStripLabel("Status: N/A") { Enabled = true };
+            _menuItemFlashTaskbar = new ToolStripMenuItem("Flash Taskbar", null, ToggleFlashTaskbar) { Checked = _settingsProvider.Settings.FlashTaskbar };
+            _menuItemPlaySound = new ToolStripMenuItem("Play Sound", null, ToggleSound) { Checked = _settingsProvider.Settings.PlaySound };
             var contextMenuStrip = new ContextMenuStrip();
 
+            contextMenuStrip.Items.Add(_menuItemFlashTaskbar);
+            contextMenuStrip.Items.Add(_menuItemPlaySound);
+            contextMenuStrip.Items.Add(new ToolStripSeparator());
             contextMenuStrip.Items.Add(_menuItemStatus);
             contextMenuStrip.Items.Add(new ToolStripSeparator());
             contextMenuStrip.Items.Add(_menuItemExit);
@@ -31,6 +47,7 @@ namespace ReadySetTarkov
                 ContextMenuStrip = contextMenuStrip,
                 Visible = true,
             };
+            this._settingsProvider = _settingsProvider;
         }
 
         public bool Visible
@@ -53,7 +70,31 @@ namespace ReadySetTarkov
 
         public void SetStatus(string text)
         {
-            _menuItemStatus.Text = $"Status: {text}";
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                _menuItemStatus.Text = $"Status: {o}";
+
+            }), text);
+        }
+
+        private void ToggleFlashTaskbar(object? sender, EventArgs e)
+        {
+            _settingsProvider.Settings.FlashTaskbar = !_settingsProvider.Settings.FlashTaskbar;
+
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                _menuItemFlashTaskbar.Checked = _settingsProvider.Settings.FlashTaskbar;
+            }), null);
+        }
+
+        private void ToggleSound(object? sender, EventArgs e)
+        {
+            _settingsProvider.Settings.PlaySound = !_settingsProvider.Settings.PlaySound;
+
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                _menuItemPlaySound.Checked = _settingsProvider.Settings.PlaySound;
+            }), null);
         }
 
         private async void TrayClosing(object? sender, EventArgs e)

@@ -10,7 +10,6 @@ namespace ReadySetTarkov.LogReader.Handlers
     {
         private static readonly Regex GameRegex = new(@"^Game(?<action>\w+)");
         private static readonly Regex TraceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)");
-        private static readonly Regex SelectProfile = new(@"^SelectProfile");
         public ApplicationHandler()
         {
         }
@@ -25,17 +24,23 @@ namespace ReadySetTarkov.LogReader.Handlers
                 var match = GameRegex.Match(line.LineContent);
                 switch (match.Groups["action"].Value)
                 {
-                    case "Starting":
-                        User32.FlashTarkov();
-                        var player = new SoundPlayer(Properties.Resources.ready);
-                        player.Play();
+                    case "Spawn":
+                        stateManager.SetMatchmakingState(MatchmakingState.Waiting);
                         break;
-                    case "Start":
-                        //User32.BringTarkovToForeground();
+                    case "Starting":
+                        stateManager.SetMatchmakingState(MatchmakingState.Starting);
+                        break;
+                    case "Started":
+                        stateManager.SetGameState(GameState.InGame);
+                        stateManager.SetMatchmakingState(MatchmakingState.None);
                         break;
                     default:
                         break;
                 }
+            }
+            else if (line.LineContent.StartsWith("LocationLoaded"))
+            {
+                stateManager.SetMatchmakingState(MatchmakingState.Matching);
             }
             else if (TraceNetwork.IsMatch(line.LineContent))
             {
@@ -49,30 +54,18 @@ namespace ReadySetTarkov.LogReader.Handlers
                         stateManager.SetGameState(GameState.Matchmaking);
                         if (arg == "G")
                         {
-                            stateManager.SetMatchmakingState(MatchmakingState.Loading);
+                            stateManager.SetMatchmakingState(MatchmakingState.LoadingData);
                         }
                         else if (arg == "I")
                         {
-                            stateManager.SetMatchmakingState(MatchmakingState.Matching);
-                        }
-                        break;
-                    // TRACE-NetworkGameCreate [0-5]
-                    case "Create":
-                        if (arg == "5")
-                        {
-                            stateManager.SetMatchmakingState(MatchmakingState.Waiting);
-                        }
-                        else if (arg == "6")
-                        {
-                            stateManager.SetGameState(GameState.InGame);
-                            stateManager.SetMatchmakingState(MatchmakingState.None);
+                            stateManager.SetMatchmakingState(MatchmakingState.LoadingMap);
                         }
                         break;
                     default:
                         break;
                 }
             }
-            else if (SelectProfile.IsMatch(line.LineContent))
+            else if (line.LineContent.StartsWith("SelectProfile"))
             {
                 stateManager.SetGameState(GameState.Lobby);
             }
