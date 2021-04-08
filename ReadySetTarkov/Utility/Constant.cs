@@ -6,8 +6,6 @@ namespace ReadySetTarkov.Utility
 {
     static class Constant
     {
-        private static readonly Assembly Assembly = Assembly.GetExecutingAssembly();
-
-        public static readonly string ProgramDirectory = Directory.GetParent(Assembly.Location)!.ToString();
+        public static readonly string ProgramDirectory = AppContext.BaseDirectory;
     }
 }
