@@ -10,7 +10,7 @@ Ready. Set. Tarkov! reads the application logs provided by the EscapeFromTarkov.
 
 ## Usage
 
-Download the latest [release][latest-release]. Extract the zip. Run the executable.  
+Download the latest [release](https://www.github.com/InKahootz/ReadySetTarkov/releases/latest/download/ReadySetTarkov.zip). Extract the zip. Run the executable.  
 You can confirm it's running by looking for the red icon in the tray. Right click to see options.
 
 Nothing is required as a prerequisite to run as it's a self-contained .NET 5 application. This is also why the executable is a bit on the larger side for a relatively simple app.
