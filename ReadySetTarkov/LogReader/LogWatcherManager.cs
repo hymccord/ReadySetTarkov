@@ -70,6 +70,10 @@ namespace ReadySetTarkov.LogReader
             _stop = true;
             if (_fileSystemWatcher != null)
                 _fileSystemWatcher.EnableRaisingEvents = false;
+
+            // The process may have exited or a new directory might have popped up
+            _gameStateManager.SetGameState(GameState.None);
+
             return await _logWatcher.Stop(force);
         }
 

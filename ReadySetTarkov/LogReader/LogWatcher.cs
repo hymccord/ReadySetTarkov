@@ -22,6 +22,7 @@ namespace ReadySetTarkov.LogReader
                 watcher.OnLogFileFound += (msg) => OnLogFileFound?.Invoke(msg);
             }
         }
+
         public event Action<List<LogLine>>? OnNewLines;
         public event Action<string>? OnLogFileFound;
 
@@ -29,7 +30,7 @@ namespace ReadySetTarkov.LogReader
         {
             if (_running)
                 return;
-            var startingPoint = DateTime.Now;// GetStartingPoint(logDirectory);
+            var startingPoint = DateTime.Now;
             foreach (var logReader in _logWatchers)
                 logReader.Start(startingPoint, logDirectory);
             _running = true;
@@ -57,11 +58,6 @@ namespace ReadySetTarkov.LogReader
             _running = false;
         }
 
-        private DateTime GetStartingPoint(string logDirectory)
-        {
-            return ApplicationLogWatcher.FindEntryPoint(logDirectory, new[] { "Application awaken" });
-        }
-
         public async Task<bool> Stop(bool force = false)
         {
             if (!_running)
@@ -69,7 +65,9 @@ namespace ReadySetTarkov.LogReader
             _stop = true;
             while (_running)
                 await Task.Delay(50);
+
             await Task.WhenAll(_logWatchers.Where(x => force || x.Info.Reset).Select(x => x.Stop()));
+
             return true;
         }
     }

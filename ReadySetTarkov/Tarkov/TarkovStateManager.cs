@@ -17,7 +17,7 @@ namespace ReadySetTarkov.Tarkov
         {
             _game.GameState = gameState;
 
-            if (gameState == GameState.Lobby)
+            if (gameState == GameState.None || gameState == GameState.Lobby)
             {
                 _tray.SetIcon("RST_red");
             }

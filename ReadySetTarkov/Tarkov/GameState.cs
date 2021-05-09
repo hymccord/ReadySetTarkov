@@ -2,6 +2,7 @@
 {
     enum GameState
     {
+        None,
         Lobby,
         Matchmaking,
         InGame,
