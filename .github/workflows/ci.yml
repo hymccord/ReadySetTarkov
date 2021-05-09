@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish -r win-x64 -o publish -p:PublishSingleFile=true -p:SelfContained=true ReadySetTarkov\ReadySetTarkov.csproj
+      run: dotnet publish -r win-x64 -o publish -p:PublishSingleFile=true -p:SelfContained=true -p:PublishTrimmed=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
