@@ -5,29 +5,34 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
+    tags: 
+      - 'v*'
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
-
     runs-on: windows-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
     - name: Publish
       run: dotnet publish -r win-x64 -o publish -p:PublishSingleFile=true -p:SelfContained=true -p:PublishTrimmed=true ReadySetTarkov\ReadySetTarkov.csproj
+    - name: Zip
+      run: Compress-Archive "publish\*" -DestinationPath "ReadySetTarkov.zip" -CompressionLevel Optimal
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
         name: ReadySetTarkov
         path: publish/*
-
+    # Create a new release: create a tag, then 'git push origin <tagname>', wait for it to build
+    - name: Create a new GitHub release if a new tag is pushed
+      uses: softprops/action-gh-release@v0.1.5
+      with:
+        files: ReadySetTarkov.zip
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
