@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
@@ -14,10 +14,11 @@ namespace ReadySetTarkov
         private readonly NotifyIcon _notifyIcon;
         private readonly SynchronizationContext _syncContext;
         private readonly ISettingsProvider _settingsProvider;
-        private ToolStripMenuItem _menuItemExit;
-        private ToolStripLabel _menuItemStatus;
-        private ToolStripMenuItem _menuItemFlashTaskbar;
-        private ToolStripMenuItem _menuItemPlaySound;
+        private readonly ToolStripMenuItem _menuItemExit;
+        private readonly ToolStripLabel _menuItemStatus;
+        private readonly ToolStripMenuItem _menuItemFlashTaskbar;
+        private readonly ToolStripMenuItem _menuItemSoundsMatchStart;
+        private readonly ToolStripMenuItem _menuItemSoundsMatchAbort;
 
         //private Timer _timer;
 
@@ -31,11 +32,20 @@ namespace ReadySetTarkov
             _menuItemExit = new ToolStripMenuItem("Exit", null, TrayClosing);
             _menuItemStatus = new ToolStripLabel("Status: N/A") { Enabled = true };
             _menuItemFlashTaskbar = new ToolStripMenuItem("Flash Taskbar", null, ToggleFlashTaskbar) { Checked = _settingsProvider.Settings.FlashTaskbar };
-            _menuItemPlaySound = new ToolStripMenuItem("Play Sound", null, ToggleSound) { Checked = _settingsProvider.Settings.PlaySound };
+            _menuItemSoundsMatchStart = new ToolStripMenuItem("Match Starting", null, ToggleMatchStart) { Checked = _settingsProvider.Settings.Sounds.MatchStart };
+            _menuItemSoundsMatchAbort = new ToolStripMenuItem("Matchmaking Aborted", null, ToggleMatchStart) { Checked = _settingsProvider.Settings.Sounds.MatchAbort };
             var contextMenuStrip = new ContextMenuStrip();
 
             contextMenuStrip.Items.Add(_menuItemFlashTaskbar);
-            contextMenuStrip.Items.Add(_menuItemPlaySound);
+
+            // Sounds
+            var soundsSubMenu = new ToolStripMenuItem("Sounds");
+            contextMenuStrip.Items.Add(soundsSubMenu);
+            soundsSubMenu.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                _menuItemSoundsMatchStart,
+                _menuItemSoundsMatchAbort,
+            });
             contextMenuStrip.Items.Add(new ToolStripSeparator());
             contextMenuStrip.Items.Add(_menuItemStatus);
             contextMenuStrip.Items.Add(new ToolStripSeparator());
@@ -87,13 +97,23 @@ namespace ReadySetTarkov
             }), null);
         }
 
-        private void ToggleSound(object? sender, EventArgs e)
+        private void ToggleMatchStart(object? sender, EventArgs e)
         {
-            _settingsProvider.Settings.PlaySound = !_settingsProvider.Settings.PlaySound;
+            _settingsProvider.Settings.Sounds.MatchStart = !_settingsProvider.Settings.Sounds.MatchStart;
 
             _syncContext.Post(new SendOrPostCallback(o =>
             {
-                _menuItemPlaySound.Checked = _settingsProvider.Settings.PlaySound;
+                _menuItemSoundsMatchStart.Checked = _settingsProvider.Settings.Sounds.MatchStart;
+            }), null);
+        }
+
+        private void ToggleMatchAbort(object? sender, EventArgs e)
+        {
+            _settingsProvider.Settings.Sounds.MatchAbort = !_settingsProvider.Settings.Sounds.MatchAbort;
+
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                _menuItemSoundsMatchAbort.Checked = _settingsProvider.Settings.Sounds.MatchAbort;
             }), null);
         }
 

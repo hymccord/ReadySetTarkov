@@ -23,6 +23,9 @@ namespace ReadySetTarkov.Tarkov
 
                 if (_matchmakingState == MatchmakingState.Starting)
                     GameStarting?.Invoke(this, EventArgs.Empty);
+
+                if (_matchmakingState == MatchmakingState.Aborted)
+                    MatchmakingAborted?.Invoke(this, EventArgs.Empty);
             }
         }
         public bool IsRunning { get; set; }
@@ -34,11 +37,13 @@ namespace ReadySetTarkov.Tarkov
                     : Path.Combine(GameDirectory, "Logs");
 
         public event EventHandler? GameStarting;
+        public event EventHandler? MatchmakingAborted;
     }
 
     internal interface IGameEvents
     {
         event EventHandler? GameStarting;
+        event EventHandler? MatchmakingAborted;
     }
 
     internal interface ITarkovGame

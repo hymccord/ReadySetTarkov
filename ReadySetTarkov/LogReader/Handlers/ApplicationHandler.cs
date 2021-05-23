@@ -69,6 +69,11 @@ namespace ReadySetTarkov.LogReader.Handlers
             {
                 stateManager.SetGameState(GameState.Lobby);
             }
+            else if (line.LineContent.Contains("Network game matching aborted"))
+            {
+                stateManager.SetGameState(GameState.Lobby);
+                stateManager.SetMatchmakingState(MatchmakingState.Aborted);
+            }
         }
     }
 }

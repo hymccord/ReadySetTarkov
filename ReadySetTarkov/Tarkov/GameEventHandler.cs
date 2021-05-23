@@ -19,6 +19,7 @@ namespace ReadySetTarkov.Tarkov
             _tarkov = tarkov;
 
             _tarkov.GameStarting += GameStartingEventHandler;
+            _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
         }
 
         private void GameStartingEventHandler(object? sender, EventArgs e)
@@ -26,12 +27,21 @@ namespace ReadySetTarkov.Tarkov
             if (_settingsProvider.Settings.FlashTaskbar)
                 User32.FlashTarkov();
 
-            if (_settingsProvider.Settings.PlaySound)
+            if (_settingsProvider.Settings.Sounds.MatchStart)
             {
                 var player = new SoundPlayer(ready);
                 player.Play();
             }
 
+        }
+
+        private void MatchmakingAbortedHandler(object? sender, EventArgs e)
+        {
+            if (_settingsProvider.Settings.Sounds.MatchAbort)
+            {
+                var player = new SoundPlayer(error);
+                player.Play();
+            }
         }
     }
 }

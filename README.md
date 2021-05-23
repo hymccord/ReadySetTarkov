@@ -39,3 +39,7 @@ dotnet run -p ReadySetTarkov
 - Sound customization
 - Swap foreground window on player spawn
 - Toast notifications
+
+### Credits
+
+Sounds from [Notification Sounds](https://notificationsounds.com/)

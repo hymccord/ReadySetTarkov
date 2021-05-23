@@ -8,6 +8,8 @@
         Matching,
         CreatingPools,
         Waiting,
-        Starting
+        Starting,
+        Aborted,
+        Canceled
     }
 }
