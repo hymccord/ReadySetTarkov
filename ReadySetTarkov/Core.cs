@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ReadySetTarkov.LogReader;
@@ -8,71 +9,88 @@ using ReadySetTarkov.Utility;
 
 namespace ReadySetTarkov
 {
-    static class Core
+    internal static class Core
     {
         private static LogWatcherManager? s_logWatcherManager;
-        private static bool s_resetting;
 
-        internal static bool Running { get; set; } = true;
-        public static Game? s_game { get; set; }
+        public static Game? Game { get; set; }
+        private static CancellationTokenSource? CancellationTokenSource { get; set; }
 
+        private static CancellationToken? MainCancellationToken => CancellationTokenSource?.Token;
+#pragma warning disable IDE0052 // Remove unread private members
         private static ISettingsProvider? s_settingsProvider;
         private static GameEventHandler? s_gameEventHandler;
+#pragma warning restore IDE0052 // Remove unread private members
         private static Tray? s_tray;
+        private static Task? s_gameFinderTask;
+        private static Task? s_logManagerTask;
 
-        public static bool CanShutdown { get; private set; }
-
-#pragma warning disable 1998
-        public static async Task Initialize(ISettingsProvider settingsProvider)
-#pragma warning restore 1998
+        public static void Initialize(ISettingsProvider settingsProvider)
         {
             s_settingsProvider = settingsProvider;
             s_tray = new Tray(settingsProvider);
-            s_game = new Game();
-            s_gameEventHandler = new GameEventHandler(settingsProvider, s_game);
-            s_logWatcherManager = new LogWatcherManager(s_game, s_tray);
-            
-            // Logging
-            _ = UpdateAsync().ConfigureAwait(false);
-            _ = s_logWatcherManager.Start();
+            Game = new Game();
+            s_gameEventHandler = new GameEventHandler(settingsProvider, Game);
+            s_logWatcherManager = new LogWatcherManager(Game, s_tray);
+            s_logWatcherManager.LogDirectoryCreated += HandleLogDirectoryCreated;
+
+            InitializeWatcherTasks();
         }
 
-        private static async Task UpdateAsync()
+        public static async Task Shutdown()
         {
-            while (s_game != null && Running)
+            CancellationTokenSource?.Cancel();
+            await (s_logManagerTask ?? Task.CompletedTask).ConfigureAwait(false);
+        }
+
+        private static async Task UpdateAsync(CancellationToken cancellationToken)
+        {
+            while (Game is not null && !cancellationToken.IsCancellationRequested)
             {
                 if (User32.GetTarkovWindow() != IntPtr.Zero)
                 {
-                    s_game.IsRunning = true;
+                    Game.IsRunning = true;
                 }
-                else if (s_game.IsRunning)
+                else if (Game.IsRunning)
                 {
-                    s_game.IsRunning = false;
-                    await Reset();
+                    Game.IsRunning = false;
+                    await Reset().ConfigureAwait(false);
                 }
-                await Task.Delay(500);
-            }
 
-            CanShutdown = true;
+                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        private static async Task Reset()
+        private static void InitializeWatcherTasks()
         {
-            if (s_resetting)
+            CancellationTokenSource = new CancellationTokenSource();
+            s_gameFinderTask = UpdateAsync(CancellationTokenSource.Token);
+            s_logManagerTask = s_logWatcherManager?.Start(CancellationTokenSource.Token);
+        }
+
+        internal static async Task Reset()
+        {
+            if (MainCancellationToken.HasValue && MainCancellationToken.Value.IsCancellationRequested)
             {
                 return;
             }
-            s_resetting = true;
-            
-            if (s_logWatcherManager != null)
-            {
-                var stoppedReader = await s_logWatcherManager.Stop();
-                await Task.Delay(1000);
-                if (stoppedReader)
-                    _ = s_logWatcherManager.Start();
-            }
 
-            s_resetting = false;
+            CancellationTokenSource?.Cancel();
+
+            await Task.WhenAll(new Task[]
+            {
+                s_gameFinderTask ?? Task.CompletedTask,
+                s_logManagerTask ?? Task.CompletedTask
+            }).ContinueWith(
+                (t) =>
+                InitializeWatcherTasks(),
+                TaskContinuationOptions.None)
+            .ConfigureAwait(false);
+        }
+
+        private static async void HandleLogDirectoryCreated(object? sender, EventArgs e)
+        {
+            await Reset().ConfigureAwait(false);
         }
     }
 }

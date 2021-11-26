@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ReadySetTarkov.LogReader
@@ -8,11 +9,7 @@ namespace ReadySetTarkov.LogReader
     public class LogWatcher
     {
         internal const int UpdateDelay = 100;
-        private List<LogFileWatcher> _logWatchers = new();
-        private bool _running;
-        private bool _stop;
-
-        private LogFileWatcher ApplicationLogWatcher => _logWatchers.Single(x => x.Info.Name == "application");
+        private readonly List<LogFileWatcher> _logWatchers = new();
 
         public LogWatcher(IEnumerable<LogWatcherInfo> logReaderInfos)
         {
@@ -26,49 +23,43 @@ namespace ReadySetTarkov.LogReader
         public event Action<List<LogLine>>? OnNewLines;
         public event Action<string>? OnLogFileFound;
 
-        public async void Start(string logDirectory)
+        public async Task WatchAsync(string logDirectory, CancellationToken cancellationToken = default)
         {
-            if (_running)
-                return;
+            cancellationToken.ThrowIfCancellationRequested();
+
             var startingPoint = DateTime.Now;
             foreach (var logReader in _logWatchers)
-                logReader.Start(startingPoint, logDirectory);
-            _running = true;
-            _stop = false;
-            var newLines = new SortedList<DateTime, List<LogLine>>();
-            while (!_stop)
             {
-                await Task.Factory.StartNew(() =>
-                {
-                    foreach (var logReader in _logWatchers)
-                    {
-                        var lines = logReader.Collect();
-                        foreach (var line in lines)
-                        {
-                            if (!newLines.TryGetValue(line.Time, out var logLines))
-                                newLines.Add(line.Time, logLines = new List<LogLine>());
-                            logLines.Add(line);
-                        }
-                    }
-                });
-                OnNewLines?.Invoke(new List<LogLine>(newLines.Values.SelectMany(x => x)));
-                newLines.Clear();
-                await Task.Delay(UpdateDelay);
+                logReader.Start(startingPoint, logDirectory, cancellationToken);
             }
-            _running = false;
-        }
 
-        public async Task<bool> Stop(bool force = false)
-        {
-            if (!_running)
-                return false;
-            _stop = true;
-            while (_running)
-                await Task.Delay(50);
+            var newLines = new SortedList<DateTime, List<LogLine>>();
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            await Task.WhenAll(_logWatchers.Where(x => force || x.Info.Reset).Select(x => x.Stop()));
+                foreach (var logReader in _logWatchers)
+                {
+                    var lines = logReader.Collect();
+                    foreach (var line in lines)
+                    {
+                        if (!newLines.TryGetValue(line.Time, out var logLines))
+                        {
+                            newLines.Add(line.Time, logLines = new List<LogLine>());
+                        }
 
-            return true;
+                        logLines.Add(line);
+                    }
+                }
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    OnNewLines?.Invoke(new List<LogLine>(newLines.Values.SelectMany(x => x)));
+                }
+
+                newLines.Clear();
+                await Task.Delay(UpdateDelay, cancellationToken);
+            }
         }
     }
 }

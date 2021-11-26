@@ -92,21 +92,32 @@ namespace ReadySetTarkov.Utility
             var tWindow = GetTarkovWindow();
             var state = GetWindowLong(tWindow, GwlStyle);
             if ((state & WsMaximize) == WsMaximize)
+            {
                 return WindowState.Maximized;
+            }
+
             if ((state & WsMinimize) == WsMinimize)
+            {
                 return WindowState.Minimized;
+            }
+
             return WindowState.Normal;
         }
 
         public static IntPtr GetTarkovWindow()
         {
             if (DateTime.Now - _lastCheck < new TimeSpan(0, 0, 5) && _tarkWindow == IntPtr.Zero)
+            {
                 return IntPtr.Zero;
+            }
 
             if (_tarkWindow != IntPtr.Zero)
             {
                 if (IsWindow(_tarkWindow))
+                {
                     return _tarkWindow;
+                }
+
                 _tarkWindow = IntPtr.Zero;
                 WindowNameCache.Clear();
             }
@@ -114,12 +125,17 @@ namespace ReadySetTarkov.Utility
             _tarkWindow = FindWindow("UnityWndClass", "EscapeFromTarkov");
 
             if (_tarkWindow != IntPtr.Zero)
+            {
                 return _tarkWindow;
+            }
+
             foreach (var windowName in WindowNames)
             {
                 _tarkWindow = FindWindow("UnityWndClass", windowName);
                 if (_tarkWindow == IntPtr.Zero)
+                {
                     continue;
+                }
                 //if (Config.Instance.TarkovWindowName != windowName)
                 //{
                 //	Config.Instance.TarkovWindowName = windowName;
@@ -127,6 +143,7 @@ namespace ReadySetTarkov.Utility
                 //}
                 break;
             }
+
             _lastCheck = DateTime.Now;
             return _tarkWindow;
         }
@@ -134,10 +151,13 @@ namespace ReadySetTarkov.Utility
         public static Process? GetTarkovProc()
         {
             if (_tarkWindow == IntPtr.Zero)
+            {
                 return null;
+            }
+
             try
             {
-                GetWindowThreadProcessId(_tarkWindow, out uint procId);
+                GetWindowThreadProcessId(_tarkWindow, out var procId);
                 return Process.GetProcessById((int)procId);
             }
             catch
@@ -150,7 +170,10 @@ namespace ReadySetTarkov.Utility
         {
             var tHandle = GetTarkovWindow();
             if (tHandle == IntPtr.Zero)
+            {
                 return;
+            }
+
             ActivateWindow(tHandle);
             SetForegroundWindow(tHandle);
         }
@@ -162,7 +185,9 @@ namespace ReadySetTarkov.Utility
         {
             // Guard: check if window already has focus.
             if (mainWindowHandle == GetForegroundWindow())
+            {
                 return;
+            }
 
             // Show window maximized.
             ShowWindow(mainWindowHandle, GetTarkovWindowState() == WindowState.Minimized ? SwRestore : SwShow);
@@ -179,9 +204,9 @@ namespace ReadySetTarkov.Utility
 
         public static string GetProcessFilename(Process p)
         {
-            int capacity = 2000;
+            var capacity = 2000;
             var builder = new StringBuilder(capacity);
-            IntPtr ptr = OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, p.Id);
+            var ptr = OpenProcess(ProcessAccessFlags.QueryLimitedInformation, false, p.Id);
             if (!QueryFullProcessImageName(ptr, 0, builder, ref capacity))
             {
                 return string.Empty;

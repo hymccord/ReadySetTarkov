@@ -5,7 +5,7 @@ using ReadySetTarkov.Utility;
 
 namespace ReadySetTarkov.Settings
 {
-    class AppSettings<T> where T : new()
+    internal class AppSettings<T> where T : new()
     {
         private const string DEFAULT_FILENAME = "settings.json";
 
@@ -28,7 +28,9 @@ namespace ReadySetTarkov.Settings
             var filePath = Path.Combine(s_directoryPath, fileName);
             T? t = new();
             if (File.Exists(filePath))
+            {
                 t = JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
+            }
 
             return t ?? new();
         }

@@ -20,6 +20,7 @@ namespace ReadySetTarkov.LogReader
                 {
                     Time = time;
                 }
+
                 LineContent = match.Groups["message"].Value;
             }
         }

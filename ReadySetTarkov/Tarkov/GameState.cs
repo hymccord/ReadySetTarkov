@@ -1,6 +1,6 @@
 ﻿namespace ReadySetTarkov.Tarkov
 {
-    enum GameState
+    internal enum GameState
     {
         None,
         Lobby,

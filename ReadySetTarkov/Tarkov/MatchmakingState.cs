@@ -1,6 +1,6 @@
 ﻿namespace ReadySetTarkov.Tarkov
 {
-    enum MatchmakingState
+    internal enum MatchmakingState
     {
         None,
         LoadingData,

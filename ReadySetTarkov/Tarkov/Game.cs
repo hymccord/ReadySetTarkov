@@ -17,15 +17,21 @@ namespace ReadySetTarkov.Tarkov
             set
             {
                 if (_matchmakingState == value)
+                {
                     return;
+                }
 
                 _matchmakingState = value;
 
                 if (_matchmakingState == MatchmakingState.Starting)
+                {
                     GameStarting?.Invoke(this, EventArgs.Empty);
+                }
 
                 if (_matchmakingState == MatchmakingState.Aborted)
+                {
                     MatchmakingAborted?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
         public bool IsRunning { get; set; }

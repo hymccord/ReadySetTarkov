@@ -1,38 +1,41 @@
-﻿using System.Media;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using ReadySetTarkov.Tarkov;
-using ReadySetTarkov.Utility;
 
 namespace ReadySetTarkov.LogReader.Handlers
 {
     internal class ApplicationHandler
     {
-        private static readonly Regex GameRegex = new(@"^Game(?<action>\w+)");
-        private static readonly Regex TraceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)");
-        public ApplicationHandler()
+        private static readonly Regex s_gameRegex = new(@"^Game(?<action>\w+)");
+        private static readonly Regex s_traceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)");
+        private readonly ITarkovStateManager _gameStateManager;
+
+        public ApplicationHandler(ITarkovStateManager gameStateManager)
         {
+            _gameStateManager = gameStateManager;
         }
 
-        internal void Handle(LogLine line, ITarkovStateManager stateManager)
+        internal void Handle(LogLine line)
         {
             if (string.IsNullOrEmpty(line.LineContent))
-                return;
-
-            if (GameRegex.IsMatch(line.LineContent))
             {
-                var match = GameRegex.Match(line.LineContent);
+                return;
+            }
+
+            if (s_gameRegex.IsMatch(line.LineContent))
+            {
+                var match = s_gameRegex.Match(line.LineContent);
                 switch (match.Groups["action"].Value)
                 {
                     case "Spawn":
-                        stateManager.SetMatchmakingState(MatchmakingState.Waiting);
+                        _gameStateManager.SetMatchmakingState(MatchmakingState.Waiting);
                         break;
                     case "Starting":
-                        stateManager.SetMatchmakingState(MatchmakingState.Starting);
+                        _gameStateManager.SetMatchmakingState(MatchmakingState.Starting);
                         break;
                     case "Started":
-                        stateManager.SetGameState(GameState.InGame);
-                        stateManager.SetMatchmakingState(MatchmakingState.None);
+                        _gameStateManager.SetGameState(GameState.InGame);
+                        _gameStateManager.SetMatchmakingState(MatchmakingState.None);
                         break;
                     default:
                         break;
@@ -40,26 +43,27 @@ namespace ReadySetTarkov.LogReader.Handlers
             }
             else if (line.LineContent.StartsWith("LocationLoaded"))
             {
-                stateManager.SetMatchmakingState(MatchmakingState.Matching);
+                _gameStateManager.SetMatchmakingState(MatchmakingState.Matching);
             }
-            else if (TraceNetwork.IsMatch(line.LineContent))
+            else if (s_traceNetwork.IsMatch(line.LineContent))
             {
-                var match = TraceNetwork.Match(line.LineContent);
+                var match = s_traceNetwork.Match(line.LineContent);
                 var action = match.Groups["action"].Value;
                 var arg = match.Groups["arg"].Value;
                 switch (action)
                 {
                     // TRACE-NetworkGameMatching [GHI]
                     case "Matching":
-                        stateManager.SetGameState(GameState.Matchmaking);
+                        _gameStateManager.SetGameState(GameState.Matchmaking);
                         if (arg == "G")
                         {
-                            stateManager.SetMatchmakingState(MatchmakingState.LoadingData);
+                            _gameStateManager.SetMatchmakingState(MatchmakingState.LoadingData);
                         }
                         else if (arg == "I")
                         {
-                            stateManager.SetMatchmakingState(MatchmakingState.LoadingMap);
+                            _gameStateManager.SetMatchmakingState(MatchmakingState.LoadingMap);
                         }
+
                         break;
                     default:
                         break;
@@ -67,12 +71,12 @@ namespace ReadySetTarkov.LogReader.Handlers
             }
             else if (line.LineContent.StartsWith("SelectProfile"))
             {
-                stateManager.SetGameState(GameState.Lobby);
+                _gameStateManager.SetGameState(GameState.Lobby);
             }
             else if (line.LineContent.Contains("Network game matching aborted"))
             {
-                stateManager.SetGameState(GameState.Lobby);
-                stateManager.SetMatchmakingState(MatchmakingState.Aborted);
+                _gameStateManager.SetGameState(GameState.Lobby);
+                _gameStateManager.SetMatchmakingState(MatchmakingState.Aborted);
             }
         }
     }

@@ -1,15 +1,14 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov
 {
-    class Tray : ITray
+    internal class Tray : ITray
     {
         private readonly NotifyIcon _notifyIcon;
         private readonly SynchronizationContext _syncContext;
@@ -20,20 +19,21 @@ namespace ReadySetTarkov
         private readonly ToolStripMenuItem _menuItemSoundsMatchStart;
         private readonly ToolStripMenuItem _menuItemSoundsMatchAbort;
 
-        //private Timer _timer;
-
-        public Tray(ISettingsProvider _settingsProvider)
+        public Tray(ISettingsProvider settingsProvider)
         {
             if (SynchronizationContext.Current == null)
+            {
                 throw new InvalidOperationException("This class must be created on the UI thread.");
+            }
 
             _syncContext = SynchronizationContext.Current;
 
+            var menuItemReset = new ToolStripMenuItem("Reset", null, Reset);
             _menuItemExit = new ToolStripMenuItem("Exit", null, TrayClosing);
             _menuItemStatus = new ToolStripLabel("Status: N/A") { Enabled = true };
-            _menuItemFlashTaskbar = new ToolStripMenuItem("Flash Taskbar", null, ToggleFlashTaskbar) { Checked = _settingsProvider.Settings.FlashTaskbar };
-            _menuItemSoundsMatchStart = new ToolStripMenuItem("Match Starting", null, ToggleMatchStart) { Checked = _settingsProvider.Settings.Sounds.MatchStart };
-            _menuItemSoundsMatchAbort = new ToolStripMenuItem("Matchmaking Aborted", null, ToggleMatchStart) { Checked = _settingsProvider.Settings.Sounds.MatchAbort };
+            _menuItemFlashTaskbar = new ToolStripMenuItem("Flash Taskbar", null, ToggleFlashTaskbar) { Checked = settingsProvider.Settings.FlashTaskbar };
+            _menuItemSoundsMatchStart = new ToolStripMenuItem("Match Starting", null, ToggleMatchStart) { Checked = settingsProvider.Settings.Sounds.MatchStart };
+            _menuItemSoundsMatchAbort = new ToolStripMenuItem("Matchmaking Aborted", null, ToggleMatchStart) { Checked = settingsProvider.Settings.Sounds.MatchAbort };
             var contextMenuStrip = new ContextMenuStrip();
 
             contextMenuStrip.Items.Add(_menuItemFlashTaskbar);
@@ -49,6 +49,7 @@ namespace ReadySetTarkov
             contextMenuStrip.Items.Add(new ToolStripSeparator());
             contextMenuStrip.Items.Add(_menuItemStatus);
             contextMenuStrip.Items.Add(new ToolStripSeparator());
+            contextMenuStrip.Items.Add(menuItemReset);
             contextMenuStrip.Items.Add(_menuItemExit);
 
             _notifyIcon = new NotifyIcon
@@ -57,7 +58,7 @@ namespace ReadySetTarkov
                 ContextMenuStrip = contextMenuStrip,
                 Visible = true,
             };
-            this._settingsProvider = _settingsProvider;
+            _settingsProvider = settingsProvider;
         }
 
         public bool Visible
@@ -117,22 +118,20 @@ namespace ReadySetTarkov
             }), null);
         }
 
+        private void Reset(object? sender, EventArgs e)
+        {
+            _ = Core.Reset();
+        }
+
         private async void TrayClosing(object? sender, EventArgs e)
         {
             try
             {
-                Core.Running = false;
-
-                for (var i = 0; i < 100; i++)
-                {
-                    if (Core.CanShutdown)
-                        break;
-                    await Task.Delay(50);
-                }
+                _notifyIcon.Visible = false;
+                await Core.Shutdown().ConfigureAwait(false);
             }
             finally
             {
-                _notifyIcon.Visible = false;
                 System.Windows.Application.Current.Shutdown();
             }
         }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ReadySetTarkov.LogReader.Handlers;
@@ -13,16 +13,18 @@ namespace ReadySetTarkov.LogReader
 {
     internal class LogWatcherManager
     {
-        private readonly ApplicationHandler _applicationLineHandler = new ApplicationHandler();
+        private readonly ApplicationHandler _applicationLineHandler;
         private readonly LogWatcher _logWatcher;
         private readonly ITarkovGame _game;
         private readonly ITray _tray;
+        private readonly ITarkovStateManager _gameStateManager;
         private FileSystemWatcher? _fileSystemWatcher;
-        private bool _stop;
         private string? _currentGameLogDir;
-        private ITarkovStateManager _gameStateManager;
 
-        public static LogWatcherInfo ApplicationLogWatcherInfo => new LogWatcherInfo("application");
+        public static LogWatcherInfo ApplicationLogWatcherInfo => new("application");
+
+        public event EventHandler? LogDirectoryCreated;
+
         public LogWatcherManager(ITarkovGame game, ITray tray)
         {
             _logWatcher = new LogWatcher(new[]
@@ -35,58 +37,57 @@ namespace ReadySetTarkov.LogReader
             _tray = tray;
 
             _gameStateManager = new TarkovStateManager(game, tray);
+            _applicationLineHandler = new ApplicationHandler(_gameStateManager);
         }
         private void OnLogFileFound(string msg)
         {
 
         }
 
-        public async Task Start()
+        public async Task Start(CancellationToken cancellationToken = default)
         {
-            await FindTarkov();
+            await FindTarkov(cancellationToken);
             InitializeGameState();
             // Even though the game has started, the latest logs folder could not be created yet
             StartDirectoryWatcher();
-            _stop = false;
 
             _tray.SetStatus("Parsing logs...");
 
             if (string.IsNullOrEmpty(_currentGameLogDir))
+            {
                 throw new InvalidOperationException("Could not find tarkov's logs directory.");
+            }
 
-            _logWatcher.Start(_currentGameLogDir);
+            await _logWatcher.WatchAsync(_currentGameLogDir, cancellationToken)
+                .ContinueWith((t) =>
+                {
+                    _fileSystemWatcher!.EnableRaisingEvents = false;
+                    _gameStateManager.SetGameState(GameState.None);
+                }, CancellationToken.None);
         }
 
-        private async Task FindTarkov()
+        private async Task FindTarkov(CancellationToken cancellationToken = default)
         {
             _tray.SetStatus("Waiting for Tarkov to start");
             //Log.Warn("Tarkov not found, waiting for process...");
-            while (User32.GetTarkovProc() == null)
-                await Task.Delay(500);
-        }
-
-        public async Task<bool> Stop(bool force = false)
-        {
-            _stop = true;
-            if (_fileSystemWatcher != null)
-                _fileSystemWatcher.EnableRaisingEvents = false;
-
-            // The process may have exited or a new directory might have popped up
-            _gameStateManager.SetGameState(GameState.None);
-
-            return await _logWatcher.Stop(force);
+            while (User32.GetTarkovProc() is null)
+            {
+                await Task.Delay(500, cancellationToken);
+            }
         }
 
         private void InitializeGameState()
         {
-            Process? proc = User32.GetTarkovProc();
+            var proc = User32.GetTarkovProc();
 
-            if (proc == null)
+            if (proc is null)
+            {
                 return;
+            }
 
             var dir = new FileInfo(User32.GetProcessFilename(proc)).Directory?.FullName;
 
-            if (dir == null)
+            if (dir is null)
             {
                 return;
             }
@@ -99,13 +100,11 @@ namespace ReadySetTarkov.LogReader
         {
             foreach (var line in lines)
             {
-                if (_stop)
-                    break;
                 //_game.GameTime.Time = line.Time;
                 switch (line.Namespace)
                 {
                     case "application":
-                        _applicationLineHandler.Handle(line, _gameStateManager);
+                        _applicationLineHandler.Handle(line);
                         break;
                 }
             }
@@ -124,10 +123,7 @@ namespace ReadySetTarkov.LogReader
             };
             _fileSystemWatcher.Created += async (s, e) =>
             {
-                _fileSystemWatcher.EnableRaisingEvents = false;
-
-                await Stop();
-                await Start();
+                LogDirectoryCreated?.Invoke(this, e);
             };
             _fileSystemWatcher.EnableRaisingEvents = true;
         }

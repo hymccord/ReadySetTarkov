@@ -25,7 +25,9 @@ namespace ReadySetTarkov.Tarkov
         private void GameStartingEventHandler(object? sender, EventArgs e)
         {
             if (_settingsProvider.Settings.FlashTaskbar)
+            {
                 User32.FlashTarkov();
+            }
 
             if (_settingsProvider.Settings.Sounds.MatchStart)
             {

@@ -1,6 +1,4 @@
-﻿using ReadySetTarkov.Settings;
-
-namespace ReadySetTarkov.Tarkov
+﻿namespace ReadySetTarkov.Tarkov
 {
     internal class TarkovStateManager : ITarkovStateManager
     {
@@ -44,7 +42,9 @@ namespace ReadySetTarkov.Tarkov
             });
 
             if (matchmakingState == MatchmakingState.Starting)
+            {
                 _tray.SetIcon("RST_green");
+            }
         }
     }
 

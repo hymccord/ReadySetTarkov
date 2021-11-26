@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -13,14 +14,10 @@ namespace ReadySetTarkov.LogReader
     {
         internal readonly LogWatcherInfo Info;
         private string? _filePath;
-        private ConcurrentQueue<LogLine> _lines = new ConcurrentQueue<LogLine>();
+        private ConcurrentQueue<LogLine> _lines = new();
         private bool _logFileExists;
         private long _offset;
-        private bool _running;
         private DateTime _startingPoint;
-        private bool _stop;
-        private Thread? _thread;
-
 
         public LogFileWatcher(LogWatcherInfo info)
         {
@@ -29,31 +26,20 @@ namespace ReadySetTarkov.LogReader
 
         public event Action<string>? OnLogFileFound;
 
-        public void Start(DateTime startingPoint, string logDirectory)
+        public void Start(DateTime startingPoint, string logDirectory, CancellationToken cancellationToken)
         {
-            if (_running)
+            if (cancellationToken.IsCancellationRequested)
+            {
                 return;
-            string[] files = Directory.GetFiles(logDirectory, "*" + Info.Name + ".log");
+            }
+
+            var files = Directory.GetFiles(logDirectory, "*" + Info.Name + ".log");
             _filePath = Path.Combine(logDirectory, files[0]);
             _startingPoint = startingPoint;
-            _stop = false;
             _offset = 0;
-            _logFileExists = false;
-            _thread = new Thread(ReadLogFile)
-            { 
-                Name = "Log File Reader",
-                IsBackground = true
-            };
-            _thread.Start();
-        }
-
-        public async Task Stop()
-        {
-            _stop = true;
-            while (_running || _thread == null || _thread.ThreadState == System.Threading.ThreadState.Unstarted)
-                await Task.Delay(50);
             _lines = new ConcurrentQueue<LogLine>();
-            await Task.Factory.StartNew(() => _thread?.Join());
+            _logFileExists = false;
+            Task.Factory.StartNew(async () => await ReadLogFileAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         public IEnumerable<LogLine> Collect()
@@ -61,19 +47,24 @@ namespace ReadySetTarkov.LogReader
             var count = _lines.Count;
             for (var i = 0; i < count; i++)
             {
-                if (_lines.TryDequeue(out LogLine? line))
+                if (_lines.TryDequeue(out var line))
+                {
                     yield return line;
+                }
             }
         }
 
-        private void ReadLogFile()
+        private async Task ReadLogFileAsync(CancellationToken cancellationToken)
         {
-            _running = true;
-            FindInitialOffset();
-            while (!_stop)
+            await FindInitialOffsetAsync(cancellationToken);
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (string.IsNullOrEmpty(_filePath))
+                {
                     throw new ArgumentNullException("Start did not find a suitable file to watch.");
+                }
 
                 var fileInfo = new FileInfo(_filePath);
                 if (fileInfo.Exists)
@@ -83,120 +74,82 @@ namespace ReadySetTarkov.LogReader
                         _logFileExists = true;
                         OnLogFileFound?.Invoke(Info.Name);
                     }
-                    using (var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        fs.Seek(_offset, SeekOrigin.Begin);
-                        if (fs.Length == _offset)
-                        {
-                            Thread.Sleep(LogWatcher.UpdateDelay);
-                            continue;
-                        }
-                        using var sr = new StreamReader(fs);
-                        string? line;
-                        while (!sr.EndOfStream && (line = sr.ReadLine()) != null)
-                        {
-                            //if (!sr.EndOfStream)
-                            //    break;
-                            var logLine = new LogLine(Info.Name, line);
-                            if (logLine.Time >= _startingPoint)
-                                _lines.Enqueue(logLine);
 
-                            _offset += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
+                    using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    fs.Seek(_offset, SeekOrigin.Begin);
+                    if (fs.Length <= _offset)
+                    {
+                        await Task.Delay(LogWatcher.UpdateDelay, cancellationToken);
+                        continue;
+                    }
+
+                    using var sr = new StreamReader(fs);
+                    string? line;
+                    while (!sr.EndOfStream && (line = await sr.ReadLineAsync()) is not null)
+                    {
+                        //if (!sr.EndOfStream)
+                        //    break;
+                        var logLine = new LogLine(Info.Name, line);
+                        if (logLine.Time >= _startingPoint)
+                        {
+                            _lines.Enqueue(logLine);
                         }
+
+                        _offset += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
                     }
                 }
-                Thread.Sleep(LogWatcher.UpdateDelay);
+
+                await Task.Delay(LogWatcher.UpdateDelay, cancellationToken);
             }
-            _running = false;
         }
 
-        private void FindInitialOffset()
+        private async Task FindInitialOffsetAsync(CancellationToken cancellationToken = default)
         {
+            // Scan the log file backwards by taking 4k chunks and finding logs lines
+            // until we get a time that is less than the starting point.
             if (string.IsNullOrEmpty(_filePath))
+            {
                 throw new ArgumentNullException("Start did not find a suitable file to watch.");
+            }
 
             var fileInfo = new FileInfo(_filePath);
             if (fileInfo.Exists)
             {
-                using (var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs, Encoding.ASCII))
+                using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var sr = new StreamReader(fs, Encoding.ASCII);
+                var offsetFromEndOfStream = 0;
+                while (offsetFromEndOfStream < fs.Length)
                 {
-                    var offset = 0;
-                    while (offset < fs.Length)
-                    {
-                        var sizeDiff = 4096 - Math.Min(fs.Length - offset, 4096);
-                        offset += 4096;
-                        var buffer = new char[4096];
-                        fs.Seek(Math.Max(fs.Length - offset, 0), SeekOrigin.Begin);
-                        sr.ReadBlock(buffer, 0, 4096);
-                        var skip = 0;
-                        for (var i = 0; i < 4096; i++)
-                        {
-                            skip++;
-                            if (buffer[i] == '\n')
-                                break;
-                        }
-                        offset -= skip;
-                        var lines =
-                            new string(buffer.Skip(skip).ToArray()).Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToArray();
-                        for (var i = lines.Length - 1; i > 0; i--)
-                        {
-                            if (string.IsNullOrWhiteSpace(lines[i].Trim('\0')))
-                                continue;
-                            var logLine = new LogLine(Info.Name, lines[i]);
-                            if (logLine.Time < _startingPoint)
-                            {
-                                var negativeOffset = lines.Take(i + 1).Sum(x => Encoding.UTF8.GetByteCount(x + Environment.NewLine));
-                                _offset = Math.Max(fs.Length - offset + negativeOffset + sizeDiff, 0);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-            _offset = 0;
-        }
+                    cancellationToken.ThrowIfCancellationRequested();
 
-        public DateTime FindEntryPoint(string logDirectory, string str) => FindEntryPoint(logDirectory, new[] { str });
-
-        public DateTime FindEntryPoint(string logDirectory, string[] str)
-        {
-            var fileInfo = new FileInfo(Path.Combine(logDirectory, Info.Name + ".log"));
-            if (fileInfo.Exists)
-            {
-                var targets = str.Select(x => new string(x.Reverse().ToArray())).ToList();
-                using (var fs = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                using (var sr = new StreamReader(fs, Encoding.ASCII))
-                {
-                    var offset = 0;
-                    while (offset < fs.Length)
+                    using var buffer = MemoryPool<char>.Shared.Rent(4096);
+                    offsetFromEndOfStream += buffer.Memory.Length;
+                    fs.Seek(Math.Max(fs.Length - offsetFromEndOfStream, 0), SeekOrigin.Begin);
+                    var bytesRead = await sr.ReadBlockAsync(buffer.Memory, cancellationToken);
+                    var bufferOverSize = buffer.Memory.Length - bytesRead;
+                    var possiblePartialLineBytesIndex = Math.Max(buffer.Memory.Span[..bytesRead].IndexOf('\n'), 0);
+                    offsetFromEndOfStream -= possiblePartialLineBytesIndex;
+                    var lines = new string(buffer.Memory.Span[(possiblePartialLineBytesIndex + 1)..])
+                        .Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                    for (var i = lines.Length - 1; i > 0; i--)
                     {
-                        offset += 4096;
-                        var buffer = new char[4096];
-                        fs.Seek(Math.Max(fs.Length - offset, 0), SeekOrigin.Begin);
-                        sr.ReadBlock(buffer, 0, 4096);
-                        var skip = 0;
-                        for (var i = 0; i < 4096; i++)
+                        if (string.IsNullOrWhiteSpace(lines[i].Trim('\0')))
                         {
-                            skip++;
-                            if (buffer[i] == '\n')
-                                break;
-                        }
-                        if (skip >= 4096)
                             continue;
-                        offset -= skip;
-                        var reverse = new string(buffer.Skip(skip).Reverse().ToArray());
-                        var targetOffsets = targets.Select(x => reverse.IndexOf(x, StringComparison.Ordinal)).Where(x => x > -1).ToList();
-                        var targetOffset = targetOffsets.Any() ? targetOffsets.Min() : -1;
-                        if (targetOffset != -1)
+                        }
+
+                        var logLine = new LogLine(Info.Name, lines[i]);
+                        if (logLine.Time < _startingPoint)
                         {
-                            var line = new string(reverse.Substring(targetOffset).TakeWhile(c => c != '\n').Reverse().ToArray());
-                            return new LogLine("", line).Time;
+                            var bytesUntilExpiredLogLine = lines[..(i + 1)].Sum(x => Encoding.UTF8.GetByteCount(x + Environment.NewLine));
+                            _offset = Math.Max(fs.Length - offsetFromEndOfStream + bytesUntilExpiredLogLine + bufferOverSize, 0);
+                            return;
                         }
                     }
                 }
             }
-            return DateTime.MinValue;
+
+            _offset = 0;
         }
     }
 }

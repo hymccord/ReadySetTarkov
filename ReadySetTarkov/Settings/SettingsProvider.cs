@@ -1,6 +1,6 @@
 ﻿namespace ReadySetTarkov.Settings
 {
-    class SettingsProvider : ISettingsProvider
+    internal class SettingsProvider : ISettingsProvider
     {
         public SettingsProvider()
         {
@@ -8,7 +8,6 @@
         }
 
         public ReadySetTarkovSettings Settings { get; }
-
 
         public void Save()
         {

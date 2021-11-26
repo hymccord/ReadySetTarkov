@@ -4,12 +4,12 @@ using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov
 {
-    class Program
+    internal class Program
     {
         [STAThread]
-        static void Main()
+        private static void Main()
         {
-            App application = new App
+            var application = new App
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown
             };
@@ -17,14 +17,14 @@ namespace ReadySetTarkov
         }
     }
 
-    class App : Application
+    internal class App : Application
     {
         private bool _exitHandled = false;
-        private ISettingsProvider settingsProvider;
+        private readonly ISettingsProvider _settingsProvider;
 
         public App()
         {
-            settingsProvider = new SettingsProvider();
+            _settingsProvider = new SettingsProvider();
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -33,7 +33,7 @@ namespace ReadySetTarkov
 
             RegisterExitEvents();
 
-            _ = Core.Initialize(settingsProvider);
+            Core.Initialize(_settingsProvider);
         }
 
         private void RegisterExitEvents()
@@ -46,9 +46,11 @@ namespace ReadySetTarkov
         private void Exiting()
         {
             if (_exitHandled)
+            {
                 return;
+            }
 
-            settingsProvider.Save();
+            _settingsProvider.Save();
 
             _exitHandled = true;
         }
