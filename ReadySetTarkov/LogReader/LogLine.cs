@@ -16,7 +16,7 @@ namespace ReadySetTarkov.LogReader
             if (match.Success)
             {
                 var ts = match.Groups["date"].Value;
-                if (DateTime.TryParse(ts, out DateTime time))
+                if (DateTime.TryParse(ts, out var time))
                 {
                     Time = time;
                 }
