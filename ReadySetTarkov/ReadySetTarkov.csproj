@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <UseUnsafeBlocks>true</UseUnsafeBlocks>
     <ApplicationIcon>Resources/RST_red.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -17,10 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.1.619-beta">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.1.619-beta" PrivateAssets="all" ExcludeAssets="compile" />
   </ItemGroup>
 
   <ItemGroup>

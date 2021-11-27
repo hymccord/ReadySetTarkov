@@ -12,11 +12,13 @@ namespace ReadySetTarkov.Tarkov
     {
         private readonly ISettingsProvider _settingsProvider;
         private readonly IGameEvents _tarkov;
+        private readonly INativeMethods _nativeMethods;
 
-        public GameEventHandler(ISettingsProvider settingsProvider, IGameEvents tarkov)
+        public GameEventHandler(ISettingsProvider settingsProvider, IGameEvents tarkov, INativeMethods nativeMethods)
         {
             _settingsProvider = settingsProvider;
             _tarkov = tarkov;
+            _nativeMethods = nativeMethods;
 
             _tarkov.GameStarting += GameStartingEventHandler;
             _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
@@ -26,7 +28,7 @@ namespace ReadySetTarkov.Tarkov
         {
             if (_settingsProvider.Settings.FlashTaskbar)
             {
-                User32.FlashTarkov();
+                _nativeMethods.FlashTarkov();
             }
 
             if (_settingsProvider.Settings.Sounds.MatchStart)

@@ -17,6 +17,7 @@ namespace ReadySetTarkov.LogReader
         private readonly LogWatcher _logWatcher;
         private readonly ITarkovGame _game;
         private readonly ITray _tray;
+        private readonly INativeMethods _nativeMethods;
         private readonly ITarkovStateManager _gameStateManager;
         private FileSystemWatcher? _fileSystemWatcher;
         private string? _currentGameLogDir;
@@ -25,7 +26,7 @@ namespace ReadySetTarkov.LogReader
 
         public event EventHandler? LogDirectoryCreated;
 
-        public LogWatcherManager(ITarkovGame game, ITray tray)
+        public LogWatcherManager(ITarkovGame game, ITray tray, INativeMethods nativeMethods)
         {
             _logWatcher = new LogWatcher(new[]
             {
@@ -38,7 +39,9 @@ namespace ReadySetTarkov.LogReader
 
             _gameStateManager = new TarkovStateManager(game, tray);
             _applicationLineHandler = new ApplicationHandler(_gameStateManager);
+            _nativeMethods = nativeMethods;
         }
+
         private void OnLogFileFound(string msg)
         {
 
@@ -70,7 +73,7 @@ namespace ReadySetTarkov.LogReader
         {
             _tray.SetStatus("Waiting for Tarkov to start");
             //Log.Warn("Tarkov not found, waiting for process...");
-            while (User32.GetTarkovProc() is null)
+            while (_nativeMethods.GetTarkovProcId() == 0)
             {
                 await Task.Delay(500, cancellationToken);
             }
@@ -78,14 +81,14 @@ namespace ReadySetTarkov.LogReader
 
         private void InitializeGameState()
         {
-            var proc = User32.GetTarkovProc();
+            var proc = _nativeMethods.GetTarkovProcId();
 
-            if (proc is null)
+            if (proc == 0)
             {
                 return;
             }
 
-            var dir = new FileInfo(User32.GetProcessFilename(proc)).Directory?.FullName;
+            var dir = new FileInfo(_nativeMethods.GetProcessFilename(proc)).Directory?.FullName;
 
             if (dir is null)
             {
@@ -121,7 +124,7 @@ namespace ReadySetTarkov.LogReader
             {
                 NotifyFilter = NotifyFilters.DirectoryName
             };
-            _fileSystemWatcher.Created += async (s, e) =>
+            _fileSystemWatcher.Created += (s, e) =>
             {
                 LogDirectoryCreated?.Invoke(this, e);
             };

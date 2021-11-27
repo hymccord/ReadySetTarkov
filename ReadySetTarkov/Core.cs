@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +14,10 @@ namespace ReadySetTarkov
     {
         private static LogWatcherManager? s_logWatcherManager;
 
-        public static Game? Game { get; set; }
+        public static Game Game { get; set; }
+
+        private static readonly NativeMethods s_nativeMethods;
+
         private static CancellationTokenSource? CancellationTokenSource { get; set; }
 
         private static CancellationToken? MainCancellationToken => CancellationTokenSource?.Token;
@@ -25,13 +29,19 @@ namespace ReadySetTarkov
         private static Task? s_gameFinderTask;
         private static Task? s_logManagerTask;
 
+        static Core()
+        {
+            s_nativeMethods = new NativeMethods(new Kernel32(), new User32());
+            Game = new Game();
+        }
+
         public static void Initialize(ISettingsProvider settingsProvider)
         {
             s_settingsProvider = settingsProvider;
             s_tray = new Tray(settingsProvider);
             Game = new Game();
-            s_gameEventHandler = new GameEventHandler(settingsProvider, Game);
-            s_logWatcherManager = new LogWatcherManager(Game, s_tray);
+            s_gameEventHandler = new GameEventHandler(settingsProvider, Game, s_nativeMethods);
+            s_logWatcherManager = new LogWatcherManager(Game, s_tray, s_nativeMethods);
             s_logWatcherManager.LogDirectoryCreated += HandleLogDirectoryCreated;
 
             InitializeWatcherTasks();
@@ -43,18 +53,20 @@ namespace ReadySetTarkov
             await (s_logManagerTask ?? Task.CompletedTask).ConfigureAwait(false);
         }
 
-        private static async Task UpdateAsync(CancellationToken cancellationToken)
+        private static async Task MonitorForGame(CancellationToken cancellationToken)
         {
-            while (Game is not null && !cancellationToken.IsCancellationRequested)
+            var gameRunning = false;
+            while (true)
             {
-                if (User32.GetTarkovWindow() != IntPtr.Zero)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (s_nativeMethods.GetTarkovWindow() != IntPtr.Zero)
                 {
-                    Game.IsRunning = true;
+                    gameRunning = true;
                 }
-                else if (Game.IsRunning)
+                else if (gameRunning)
                 {
-                    Game.IsRunning = false;
-                    await Reset().ConfigureAwait(false);
+                    _ = Reset().ConfigureAwait(false);
                 }
 
                 await Task.Delay(500, cancellationToken).ConfigureAwait(false);
@@ -64,7 +76,7 @@ namespace ReadySetTarkov
         private static void InitializeWatcherTasks()
         {
             CancellationTokenSource = new CancellationTokenSource();
-            s_gameFinderTask = UpdateAsync(CancellationTokenSource.Token);
+            s_gameFinderTask = MonitorForGame(CancellationTokenSource.Token);
             s_logManagerTask = s_logWatcherManager?.Start(CancellationTokenSource.Token);
         }
 
@@ -86,6 +98,7 @@ namespace ReadySetTarkov
                 InitializeWatcherTasks(),
                 TaskContinuationOptions.None)
             .ConfigureAwait(false);
+            Debug.WriteLine("");
         }
 
         private static async void HandleLogDirectoryCreated(object? sender, EventArgs e)

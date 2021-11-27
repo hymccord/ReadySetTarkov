@@ -58,6 +58,7 @@ namespace ReadySetTarkov
                 ContextMenuStrip = contextMenuStrip,
                 Visible = true,
             };
+            _notifyIcon.MouseUp += ToggleContextMenu;
             _settingsProvider = settingsProvider;
         }
 
@@ -121,6 +122,14 @@ namespace ReadySetTarkov
         private void Reset(object? sender, EventArgs e)
         {
             _ = Core.Reset();
+        }
+
+        private void ToggleContextMenu(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _notifyIcon.ContextMenuStrip.Close();
+            }
         }
 
         private async void TrayClosing(object? sender, EventArgs e)

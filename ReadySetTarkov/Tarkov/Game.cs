@@ -34,8 +34,6 @@ namespace ReadySetTarkov.Tarkov
                 }
             }
         }
-        public bool IsRunning { get; set; }
-
         public string? GameDirectory { get; set; }
 
         public string? LogsDirectory => string.IsNullOrEmpty(GameDirectory)

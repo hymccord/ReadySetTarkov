@@ -1,0 +1,16 @@
+﻿// Kernel32
+QueryFullProcessImageName
+OpenProcess
+
+// User32
+GetForegroundWindow
+SetForegroundWindow
+GetWindowLong
+SetWindowLong
+GetClassName
+FlashWindow
+ShowWindow
+FindWindow
+IsWindow
+keybd_event
+GetWindowThreadProcessId
