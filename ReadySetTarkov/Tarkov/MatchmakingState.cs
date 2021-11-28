@@ -9,6 +9,7 @@
         CreatingPools,
         Waiting,
         Starting,
+        Started,
         Aborted,
         Canceled
     }

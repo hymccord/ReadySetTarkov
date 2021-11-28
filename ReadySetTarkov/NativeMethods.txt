@@ -9,7 +9,7 @@ GetWindowLong
 SetWindowLong
 GetClassName
 FlashWindow
-ShowWindow
+ShowWindowAsync
 FindWindow
 IsWindow
 keybd_event

@@ -9,7 +9,6 @@
         uint GetWindowThreadProcessId(nint hWnd);
         bool IsWindow(nint hWnd);
         bool SetForegroundWindow(nint hWnd);
-        void SetWindowLong();
-        bool ShowWindow(nint hWnd, bool restore);
+        bool ShowWindowAsync(nint hWnd, bool showDefault);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Media;
-
+using System.Threading.Tasks;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Utility;
 
@@ -21,10 +21,11 @@ namespace ReadySetTarkov.Tarkov
             _nativeMethods = nativeMethods;
 
             _tarkov.GameStarting += GameStartingEventHandler;
+            _tarkov.GameStarted += GameStartedEventHandler;
             _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
         }
 
-        private void GameStartingEventHandler(object? sender, EventArgs e)
+        private async void GameStartingEventHandler(object? sender, EventArgs e)
         {
             if (_settingsProvider.Settings.FlashTaskbar)
             {
@@ -37,6 +38,23 @@ namespace ReadySetTarkov.Tarkov
                 player.Play();
             }
 
+            if (_settingsProvider.Settings.SetTopMost && _settingsProvider.Settings.WithSecondsLeft > 0)
+            {
+                // Going to assume 20 seconds, there's no log way to get the amount of time
+                // remaining. Maybe use the GameStarted to force window?
+                await Task.Delay(20 * 1000 - _settingsProvider.Settings.WithSecondsLeft * 1000)
+                    .ContinueWith(t =>
+                        _nativeMethods.BringTarkovToForeground()
+                        );
+            }
+        }
+
+        private void GameStartedEventHandler(object? sender, EventArgs e)
+        {
+            if (_settingsProvider.Settings.SetTopMost && _settingsProvider.Settings.WithSecondsLeft == 0)
+            {
+                _nativeMethods.BringTarkovToForeground();
+            }
         }
 
         private void MatchmakingAbortedHandler(object? sender, EventArgs e)

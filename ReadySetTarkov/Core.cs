@@ -66,6 +66,8 @@ namespace ReadySetTarkov
                 }
                 else if (gameRunning)
                 {
+                    // Dont await this one. Can get a cycle of awaiting.
+                    // s_gameFinderTask (MonitorForGame())6 -> await Reset() -> await s_gameFinderTask()
                     _ = Reset().ConfigureAwait(false);
                 }
 

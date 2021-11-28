@@ -8,6 +8,7 @@ using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov
 {
+    // TODO: Convert to using XAML, this is getting unwieldy
     internal class Tray : ITray
     {
         private readonly NotifyIcon _notifyIcon;
@@ -16,6 +17,12 @@ namespace ReadySetTarkov
         private readonly ToolStripMenuItem _menuItemExit;
         private readonly ToolStripLabel _menuItemStatus;
         private readonly ToolStripMenuItem _menuItemFlashTaskbar;
+        private readonly ToolStripMenuItem _menuItemSetTopMost;
+        private readonly ToolStripMenuItem _menuItemSetTopMostAt20;
+        private readonly ToolStripMenuItem _menuItemSetTopMostAt10;
+        private readonly ToolStripMenuItem _menuItemSetTopMostAt5;
+        private readonly ToolStripMenuItem _menuItemSetTopMostAt3;
+        private readonly ToolStripMenuItem _menuItemSetTopMostAt0;
         private readonly ToolStripMenuItem _menuItemSoundsMatchStart;
         private readonly ToolStripMenuItem _menuItemSoundsMatchAbort;
 
@@ -32,11 +39,28 @@ namespace ReadySetTarkov
             _menuItemExit = new ToolStripMenuItem("Exit", null, TrayClosing);
             _menuItemStatus = new ToolStripLabel("Status: N/A") { Enabled = true };
             _menuItemFlashTaskbar = new ToolStripMenuItem("Flash Taskbar", null, ToggleFlashTaskbar) { Checked = settingsProvider.Settings.FlashTaskbar };
+            _menuItemSetTopMost = new ToolStripMenuItem("Bring Window to Foreground", null, ToggleTopMost) { Checked = settingsProvider.Settings.SetTopMost };
+            _menuItemSetTopMostAt20 = new ToolStripMenuItem("20s left", null, SetTopMostAt) { Tag = 20, Checked = settingsProvider.Settings.WithSecondsLeft == 20 };
+            _menuItemSetTopMostAt10 = new ToolStripMenuItem("10s left", null, SetTopMostAt) { Tag = 10, Checked = settingsProvider.Settings.WithSecondsLeft == 10 };
+            _menuItemSetTopMostAt5 = new ToolStripMenuItem("5s left", null, SetTopMostAt) { Tag = 5, Checked = settingsProvider.Settings.WithSecondsLeft == 5 };
+            _menuItemSetTopMostAt3 = new ToolStripMenuItem("3s left", null, SetTopMostAt) { Tag = 3, Checked = settingsProvider.Settings.WithSecondsLeft == 3 };
+            _menuItemSetTopMostAt0 = new ToolStripMenuItem("0s left", null, SetTopMostAt) { Tag = 0, Checked = settingsProvider.Settings.WithSecondsLeft == 0 };
             _menuItemSoundsMatchStart = new ToolStripMenuItem("Match Starting", null, ToggleMatchStart) { Checked = settingsProvider.Settings.Sounds.MatchStart };
             _menuItemSoundsMatchAbort = new ToolStripMenuItem("Matchmaking Aborted", null, ToggleMatchStart) { Checked = settingsProvider.Settings.Sounds.MatchAbort };
             var contextMenuStrip = new ContextMenuStrip();
 
             contextMenuStrip.Items.Add(_menuItemFlashTaskbar);
+            contextMenuStrip.Items.Add(_menuItemSetTopMost);
+
+            // Set foreground with time left
+            _menuItemSetTopMost.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                _menuItemSetTopMostAt20,
+                _menuItemSetTopMostAt10,
+                _menuItemSetTopMostAt5,
+                _menuItemSetTopMostAt3,
+                _menuItemSetTopMostAt0,
+            });
 
             // Sounds
             var soundsSubMenu = new ToolStripMenuItem("Sounds");
@@ -99,6 +123,36 @@ namespace ReadySetTarkov
             }), null);
         }
 
+        private void ToggleTopMost(object? sender, EventArgs e)
+        {
+            _settingsProvider.Settings.SetTopMost = !_settingsProvider.Settings.SetTopMost;
+
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                _menuItemSetTopMost.Checked = _settingsProvider.Settings.SetTopMost;
+            }), null);
+        }
+
+        private void SetTopMostAt(object? sender, EventArgs e)
+        {
+            if (sender is not ToolStripMenuItem toolStripMenuItem)
+            {
+                throw new NotImplementedException();
+            }
+
+            _settingsProvider.Settings.WithSecondsLeft = (int)toolStripMenuItem.Tag;
+
+            _syncContext.Post(new SendOrPostCallback(o =>
+            {
+                foreach (ToolStripMenuItem item in _menuItemSetTopMost.DropDownItems)
+                {
+                    item.Checked = false;
+                }
+
+                toolStripMenuItem.Checked = true;
+            }), null);
+        }
+
         private void ToggleMatchStart(object? sender, EventArgs e)
         {
             _settingsProvider.Settings.Sounds.MatchStart = !_settingsProvider.Settings.Sounds.MatchStart;
@@ -141,7 +195,10 @@ namespace ReadySetTarkov
             }
             finally
             {
-                System.Windows.Application.Current.Shutdown();
+                _syncContext.Post(new SendOrPostCallback(o =>
+                {
+                    System.Windows.Application.Current.Shutdown();
+                }), null);
             }
         }
     }
