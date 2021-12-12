@@ -97,11 +97,14 @@ namespace ReadySetTarkov
         private async void LogUnhandledExceptionAsync(Exception ex, string sources)
 #pragma warning restore VSTHRD100, VSTHRD200
         {
+#if DEBUG
             await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
-
+#endif
             await Task.Delay(5000);
 
+#if DEBUG
             await _icon.CloseBalloonTipAsync();
+#endif
         }
     }
 }
