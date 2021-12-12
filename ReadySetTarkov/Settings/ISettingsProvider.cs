@@ -1,6 +1,6 @@
 ﻿namespace ReadySetTarkov.Settings
 {
-    internal interface ISettingsProvider
+    public interface ISettingsProvider
     {
         ReadySetTarkovSettings Settings { get; }
         void Save();

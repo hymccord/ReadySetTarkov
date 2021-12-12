@@ -39,7 +39,8 @@ namespace ReadySetTarkov.LogReader
             _offset = 0;
             _lines = new ConcurrentQueue<LogLine>();
             _logFileExists = false;
-            Task.Factory.StartNew(async () => await ReadLogFileAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _ = Task.Factory.StartNew(async () 
+                => await ReadLogFileAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         public IEnumerable<LogLine> Collect()
@@ -63,7 +64,7 @@ namespace ReadySetTarkov.LogReader
 
                 if (string.IsNullOrEmpty(_filePath))
                 {
-                    throw new ArgumentNullException("Start did not find a suitable file to watch.");
+                    throw new InvalidOperationException("Start did not find a suitable file to watch.");
                 }
 
                 var fileInfo = new FileInfo(_filePath);
@@ -109,7 +110,7 @@ namespace ReadySetTarkov.LogReader
             // until we get a time that is less than the starting point.
             if (string.IsNullOrEmpty(_filePath))
             {
-                throw new ArgumentNullException("Start did not find a suitable file to watch.");
+                throw new InvalidOperationException("Start did not find a suitable file to watch.");
             }
 
             var fileInfo = new FileInfo(_filePath);

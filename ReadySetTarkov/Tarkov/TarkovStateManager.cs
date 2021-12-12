@@ -17,7 +17,7 @@
 
             if (gameState == GameState.None || gameState == GameState.Lobby)
             {
-                _tray.SetIcon("RST_red");
+                _tray.SetIcon("RST_red.ico");
             }
 
             if (gameState == GameState.InGame)
@@ -43,7 +43,7 @@
 
             if (matchmakingState == MatchmakingState.Starting)
             {
-                _tray.SetIcon("RST_green");
+                _tray.SetIcon("RST_green.ico");
             }
         }
     }

@@ -47,9 +47,9 @@ namespace ReadySetTarkov.LogReader
 
         }
 
-        public async Task Start(CancellationToken cancellationToken = default)
+        public async Task StartAsync(CancellationToken cancellationToken = default)
         {
-            await FindTarkov(cancellationToken);
+            await FindTarkovAsync(cancellationToken);
             InitializeGameState();
             // Even though the game has started, the latest logs folder could not be created yet
             StartDirectoryWatcher();
@@ -66,10 +66,13 @@ namespace ReadySetTarkov.LogReader
                 {
                     _fileSystemWatcher!.EnableRaisingEvents = false;
                     _gameStateManager.SetGameState(GameState.None);
-                }, CancellationToken.None);
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
         }
 
-        private async Task FindTarkov(CancellationToken cancellationToken = default)
+        private async Task FindTarkovAsync(CancellationToken cancellationToken = default)
         {
             _tray.SetStatus("Waiting for Tarkov to start");
             //Log.Warn("Tarkov not found, waiting for process...");

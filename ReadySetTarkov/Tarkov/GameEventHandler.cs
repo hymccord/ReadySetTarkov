@@ -25,7 +25,9 @@ namespace ReadySetTarkov.Tarkov
             _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
         }
 
+#pragma warning disable VSTHRD100 // Avoid async void methods
         private async void GameStartingEventHandler(object? sender, EventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
             if (_settingsProvider.Settings.FlashTaskbar)
             {
@@ -44,7 +46,8 @@ namespace ReadySetTarkov.Tarkov
                 // remaining. Maybe use the GameStarted to force window?
                 await Task.Delay(20 * 1000 - _settingsProvider.Settings.WithSecondsLeft * 1000)
                     .ContinueWith(t =>
-                        _nativeMethods.BringTarkovToForeground()
+                        _nativeMethods.BringTarkovToForeground(),
+                        TaskScheduler.Default
                         );
             }
         }

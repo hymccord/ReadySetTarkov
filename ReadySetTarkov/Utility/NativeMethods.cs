@@ -17,7 +17,7 @@ namespace ReadySetTarkov.Utility
         private static DateTime s_lastCheck;
         private static nint s_tarkWindow;
 
-        private static readonly Dictionary<IntPtr, string> WindowNameCache = new Dictionary<IntPtr, string>();
+        private static readonly Dictionary<IntPtr, string> s_windowNameCache = new();
 
         private static readonly string[] s_windowNames = { "EscapeFromTarkov" };
         private readonly IKernel32 _kernel32;
@@ -40,7 +40,7 @@ namespace ReadySetTarkov.Utility
                 }
 
                 s_tarkWindow = IntPtr.Zero;
-                WindowNameCache.Clear();
+                s_windowNameCache.Clear();
             }
 
             s_tarkWindow = _user32.FindWindow("UnityWndClass", "EscapeFromTarkov");
