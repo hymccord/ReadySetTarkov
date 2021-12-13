@@ -81,17 +81,7 @@ namespace ReadySetTarkov
 
         public void SetIcon(string resource)
         {
-            //try
-            //{
-            //    CurrentIcon = new BitmapImage(new System.Uri(@"pack://application:,,,/"
-            //        + Assembly.GetExecutingAssembly().GetName().Name
-            //        + ";component;"
-            //        + $"Resources/{resource}", System.UriKind.Absolute));
-            //}
-            //catch (System.Exception)
-            //{
-
-            //}
+            CurrentIcon = $"Resources/{resource}";
         }
 
         public void SetStatus(string text)
