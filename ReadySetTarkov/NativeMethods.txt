@@ -7,6 +7,10 @@ GetForegroundWindow
 SetForegroundWindow
 GetWindowLong
 SetWindowLong
+GetWindowThreadProcessId
+SetWindowPos
+SetFocus
+SetActiveWindow
 GetClassName
 FlashWindow
 ShowWindowAsync
@@ -14,3 +18,5 @@ FindWindow
 IsWindow
 keybd_event
 GetWindowThreadProcessId
+
+SET_WINDOW_POS_FLAGS

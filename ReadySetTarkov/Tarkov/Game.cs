@@ -28,7 +28,7 @@ namespace ReadySetTarkov.Tarkov
                     GameStarting?.Invoke(this, EventArgs.Empty);
                 }
 
-                if (_matchmakingState == MatchmakingState.Starting)
+                if (_matchmakingState == MatchmakingState.Started)
                 {
                     GameStarted?.Invoke(this, EventArgs.Empty);
                 }

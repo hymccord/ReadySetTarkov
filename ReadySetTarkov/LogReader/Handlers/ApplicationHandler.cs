@@ -34,6 +34,7 @@ namespace ReadySetTarkov.LogReader.Handlers
                         _gameStateManager.SetMatchmakingState(MatchmakingState.Starting);
                         break;
                     case "Started":
+                        _gameStateManager.SetMatchmakingState(MatchmakingState.Started);
                         _gameStateManager.SetGameState(GameState.InGame);
                         _gameStateManager.SetMatchmakingState(MatchmakingState.None);
                         break;

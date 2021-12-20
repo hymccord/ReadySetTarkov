@@ -75,6 +75,11 @@ namespace ReadySetTarkov.Utility
             return _user32.GetWindowThreadProcessId(s_tarkWindow);
         }
 
+        private static readonly nint HWND_TOPMOST = new IntPtr(-1);
+        private static readonly nint HWND_NOTOPMOST = new IntPtr(-2);
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
         public void BringTarkovToForeground()
         {
             var tHandle = GetTarkovWindow();
@@ -83,9 +88,11 @@ namespace ReadySetTarkov.Utility
                 return;
             }
 
-            _user32.ShowWindowAsync(tHandle, true);
-            _user32.ShowWindowAsync(tHandle, false);
+            _user32.SetWindowPos(tHandle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+            _user32.SetWindowPos(tHandle, HWND_NOTOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
             _user32.SetForegroundWindow(tHandle);
+            _user32.SetFocus(tHandle);
+            _user32.SetActiveWindow(tHandle);
         }
 
         public void FlashTarkov() => _user32.FlashWindow(GetTarkovWindow(), false);

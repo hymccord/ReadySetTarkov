@@ -16,12 +16,7 @@ namespace ReadySetTarkov
 
         public TrayViewModel(ISettingsProvider settingsProvider)
         {
-
-            //var bImage = new BitmapImage(new Uri("Resources/RST_red.ico", UriKind.RelativeOrAbsolute));
-            //_currentIcon = BitmapFrame.Create(bImage);
-
-            //NotifyPropertyChanged(nameof(CurrentIcon));
-
+            _settingsProvider = settingsProvider;
             TimeLeftOptions = new ObservableCollection<TimeLeftOption>
             {
                 new TimeLeftOption(settingsProvider, 20),
@@ -30,15 +25,18 @@ namespace ReadySetTarkov
                 new TimeLeftOption(settingsProvider, 3),
                 new TimeLeftOption(settingsProvider, 0),
             };
-            _settingsProvider = settingsProvider;
 
-            //SetIcon("rst_red.ico");
-            CurrentIcon = "Resources/RST_red.ico";
+            SetIcon("rst_red.ico");
         }
 
-        public ICommand ResetCommand => new DelegateCommand(Reset);
+        private ICommand? _settingsCommand;
+        public ICommand SettingsCommand => _settingsCommand ??= new DelegateCommand(HandleSettings);
 
-        public ICommand ExitCommand => new DelegateCommand(Exit);
+        private ICommand? _resetCommand;
+        public ICommand ResetCommand => _resetCommand ??= new DelegateCommand(Reset);
+
+        private ICommand? _exitCommand;
+        public ICommand ExitCommand => _exitCommand ??= new DelegateCommand(Exit);
 
         public ObservableCollection<TimeLeftOption> TimeLeftOptions { get; }
 
@@ -130,6 +128,10 @@ namespace ReadySetTarkov
             {
                 IsChecked = !IsChecked;
             }
+        }
+
+        private void HandleSettings()
+        {
         }
     }
 

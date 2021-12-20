@@ -11,6 +11,15 @@ namespace ReadySetTarkov.Utility
 
         public bool SetForegroundWindow(nint hWnd) => PInvoke.SetForegroundWindow((HWND)hWnd);
 
+        public bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags)
+        {
+            return PInvoke.SetWindowPos((HWND)hWnd, (HWND)hWndInsertAfter, x, y, cx, cy, (SET_WINDOW_POS_FLAGS)uFlags);
+        }
+
+        public nint SetActiveWindow(nint hWnd) => PInvoke.SetActiveWindow((HWND)hWnd);
+
+        public nint SetFocus(nint hWnd) => PInvoke.SetFocus((HWND)hWnd);
+
         public int GetWindowLong(nint hWnd)
             => PInvoke.GetWindowLong(
                 (HWND)hWnd,
