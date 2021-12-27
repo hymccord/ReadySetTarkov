@@ -25,7 +25,7 @@ namespace ReadySetTarkov.Utility
                 (HWND)hWnd,
                 WINDOW_LONG_PTR_INDEX.GWL_STYLE);
 
-        public bool FlashWindow(nint hWnd, bool invert)
+        public void FlashWindow(nint hWnd, bool invert)
             => PInvoke.FlashWindow(
                 (HWND)hWnd,
                 invert);
