@@ -1,10 +1,9 @@
-﻿namespace ReadySetTarkov.Tarkov
+﻿namespace ReadySetTarkov.Tarkov;
+
+internal enum GameState
 {
-    internal enum GameState
-    {
-        None,
-        Lobby,
-        Matchmaking,
-        InGame,
-    }
+    None,
+    Lobby,
+    Matchmaking,
+    InGame,
 }

@@ -4,62 +4,61 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ReadySetTarkov.LogReader
-{
-    public class LogWatcher
-    {
-        internal const int UpdateDelay = 100;
-        private readonly List<LogFileWatcher> _logWatchers = new();
+namespace ReadySetTarkov.LogReader;
 
-        public LogWatcher(IEnumerable<LogWatcherInfo> logReaderInfos)
+public class LogWatcher
+{
+    internal const int UpdateDelay = 100;
+    private readonly List<LogFileWatcher> _logWatchers = new();
+
+    public LogWatcher(IEnumerable<LogWatcherInfo> logReaderInfos)
+    {
+        _logWatchers.AddRange(logReaderInfos.Select(x => new LogFileWatcher(x)));
+        foreach (LogFileWatcher? watcher in _logWatchers)
         {
-            _logWatchers.AddRange(logReaderInfos.Select(x => new LogFileWatcher(x)));
-            foreach (var watcher in _logWatchers)
-            {
-                watcher.OnLogFileFound += (msg) => OnLogFileFound?.Invoke(msg);
-            }
+            watcher.OnLogFileFound += (msg) => OnLogFileFound?.Invoke(msg);
+        }
+    }
+
+    public event Action<List<LogLine>>? OnNewLines;
+    public event Action<string>? OnLogFileFound;
+
+    public async Task WatchAsync(string logDirectory, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        DateTime startingPoint = DateTime.Now;
+        foreach (LogFileWatcher? logReader in _logWatchers)
+        {
+            logReader.Start(startingPoint, logDirectory, cancellationToken);
         }
 
-        public event Action<List<LogLine>>? OnNewLines;
-        public event Action<string>? OnLogFileFound;
-
-        public async Task WatchAsync(string logDirectory, CancellationToken cancellationToken = default)
+        var newLines = new SortedList<DateTime, List<LogLine>>();
+        while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var startingPoint = DateTime.Now;
-            foreach (var logReader in _logWatchers)
+            foreach (LogFileWatcher? logReader in _logWatchers)
             {
-                logReader.Start(startingPoint, logDirectory, cancellationToken);
-            }
-
-            var newLines = new SortedList<DateTime, List<LogLine>>();
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                foreach (var logReader in _logWatchers)
+                IEnumerable<LogLine>? lines = logReader.Collect();
+                foreach (LogLine? line in lines)
                 {
-                    var lines = logReader.Collect();
-                    foreach (var line in lines)
+                    if (!newLines.TryGetValue(line.Time, out List<LogLine>? logLines))
                     {
-                        if (!newLines.TryGetValue(line.Time, out var logLines))
-                        {
-                            newLines.Add(line.Time, logLines = new List<LogLine>());
-                        }
-
-                        logLines.Add(line);
+                        newLines.Add(line.Time, logLines = new List<LogLine>());
                     }
-                }
 
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    OnNewLines?.Invoke(new List<LogLine>(newLines.Values.SelectMany(x => x)));
+                    logLines.Add(line);
                 }
-
-                newLines.Clear();
-                await Task.Delay(UpdateDelay, cancellationToken);
             }
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                OnNewLines?.Invoke(new List<LogLine>(newLines.Values.SelectMany(x => x)));
+            }
+
+            newLines.Clear();
+            await Task.Delay(UpdateDelay, cancellationToken);
         }
     }
 }

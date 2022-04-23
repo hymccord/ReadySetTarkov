@@ -3,36 +3,35 @@ using System.Text.Json;
 
 using ReadySetTarkov.Utility;
 
-namespace ReadySetTarkov.Settings
+namespace ReadySetTarkov.Settings;
+
+internal class AppSettings<T> where T : new()
 {
-    internal class AppSettings<T> where T : new()
+    private const string DEFAULT_FILENAME = "settings.json";
+
+    private static readonly string s_directoryPath = Constant.ProgramDirectory;
+
+    public void Save(string fileName = DEFAULT_FILENAME)
     {
-        private const string DEFAULT_FILENAME = "settings.json";
+        string? filePath = Path.Combine(s_directoryPath, fileName);
+        File.WriteAllText(filePath, JsonSerializer.Serialize(this));
+    }
 
-        private static readonly string s_directoryPath = Constant.ProgramDirectory;
+    public static void Save(T settings, string fileName = DEFAULT_FILENAME)
+    {
+        string? filePath = Path.Combine(s_directoryPath, fileName);
+        File.WriteAllText(filePath, JsonSerializer.Serialize(settings));
+    }
 
-        public void Save(string fileName = DEFAULT_FILENAME)
+    public static T Load(string fileName = DEFAULT_FILENAME)
+    {
+        string? filePath = Path.Combine(s_directoryPath, fileName);
+        T? t = new();
+        if (File.Exists(filePath))
         {
-            var filePath = Path.Combine(s_directoryPath, fileName);
-            File.WriteAllText(filePath, JsonSerializer.Serialize(this));
+            t = JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
         }
 
-        public static void Save(T settings, string fileName = DEFAULT_FILENAME)
-        {
-            var filePath = Path.Combine(s_directoryPath, fileName);
-            File.WriteAllText(filePath, JsonSerializer.Serialize(settings));
-        }
-
-        public static T Load(string fileName = DEFAULT_FILENAME)
-        {
-            var filePath = Path.Combine(s_directoryPath, fileName);
-            T? t = new();
-            if (File.Exists(filePath))
-            {
-                t = JsonSerializer.Deserialize<T>(File.ReadAllText(filePath));
-            }
-
-            return t ?? new();
-        }
+        return t ?? new();
     }
 }

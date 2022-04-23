@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Windows;
 
-namespace ReadySetTarkov
+namespace ReadySetTarkov;
+
+internal class Program
 {
-    internal class Program
+    [STAThread]
+    private static void Main()
     {
-        [STAThread]
-        private static void Main()
+        var application = new App
         {
-            var application = new App
-            {
-                ShutdownMode = ShutdownMode.OnExplicitShutdown
-            };
-            application.Run();
-        }
+            ShutdownMode = ShutdownMode.OnExplicitShutdown
+        };
+        _ = application.Run();
     }
 }
 

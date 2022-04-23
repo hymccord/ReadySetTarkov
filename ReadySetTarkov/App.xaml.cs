@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+
 using DryIoc.Microsoft.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using ReadySetTarkov.Settings;
+
 using Serilog;
 using Serilog.Events;
 

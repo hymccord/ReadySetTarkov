@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Threading;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Threading;
+
 using ReadySetTarkov.LogReader;
 using ReadySetTarkov.LogReader.Handlers;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
-using Serilog.Events;
+
 using Serilog;
-using Microsoft.Extensions.Logging;
 using Serilog.Core;
+using Serilog.Events;
 
 namespace ReadySetTarkov;
 
@@ -21,29 +24,29 @@ public static class ReadySetTarkovHostBuilderExtensions
 {
     public static IHostBuilder AddServices(this IHostBuilder hostBuilder)
     {
-        hostBuilder.ConfigureServices(services =>
+        _ = hostBuilder.ConfigureServices(services =>
         {
-            services.AddSingleton<ICoreService, Core>();
-            services.AddSingleton<IHostedService>(s => s.GetRequiredService<ICoreService>());
-            services.AddHostedService<GameEventHandler>();
+            _ = services.AddSingleton<ICoreService, Core>();
+            _ = services.AddSingleton<IHostedService>(s => s.GetRequiredService<ICoreService>());
+            _ = services.AddHostedService<GameEventHandler>();
 
-            services.AddSingleton<Game>();
-            services.AddSingleton<ITarkovGame>(s => s.GetRequiredService<Game>());
-            services.AddSingleton<IGameEvents>(s => s.GetRequiredService<Game>());
-            services.AddSingleton<INotifyIcon, Tray>();
-            services.AddSingleton<ITray, TrayViewModel>();
-            services.AddSingleton<ISettingsProvider, SettingsProvider>();
-            services.AddSingleton<ApplicationHandler>();
-            services.AddSingleton<ITarkovStateManager, TarkovStateManager>();
-            services.AddSingleton<LogWatcherManager>();
+            _ = services.AddSingleton<Game>();
+            _ = services.AddSingleton<ITarkovGame>(s => s.GetRequiredService<Game>());
+            _ = services.AddSingleton<IGameEvents>(s => s.GetRequiredService<Game>());
+            _ = services.AddSingleton<INotifyIcon, Tray>();
+            _ = services.AddSingleton<ITray, TrayViewModel>();
+            _ = services.AddSingleton<ISettingsProvider, SettingsProvider>();
+            _ = services.AddSingleton<ApplicationHandler>();
+            _ = services.AddSingleton<ITarkovStateManager, TarkovStateManager>();
+            _ = services.AddSingleton<LogWatcherManager>();
 
             var joinableTaskContext = new JoinableTaskContext(Thread.CurrentThread, new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher, DispatcherPriority.Background));
-            services.AddSingleton(joinableTaskContext);
-            services.AddSingleton(joinableTaskContext.Factory);
+            _ = services.AddSingleton(joinableTaskContext);
+            _ = services.AddSingleton(joinableTaskContext.Factory);
 
-            services.AddTransient<INativeMethods, NativeMethods>();
-            services.AddTransient<IKernel32, Kernel32>();
-            services.AddTransient<IUser32, User32>();
+            _ = services.AddTransient<INativeMethods, NativeMethods>();
+            _ = services.AddTransient<IKernel32, Kernel32>();
+            _ = services.AddTransient<IUser32, User32>();
         });
 
         return hostBuilder;
@@ -51,14 +54,14 @@ public static class ReadySetTarkovHostBuilderExtensions
 
     public static LoggerConfiguration MinimumLevelFromConfiguration(this LoggerConfiguration builder, IConfiguration config)
     {
-        foreach (var (key, value) in config.AsEnumerable())
+        foreach ((string key, string value) in config.AsEnumerable())
         {
-            var idx = key.LastIndexOf(':');
-            var eventName = key[(idx + 1)..];
+            int idx = key.LastIndexOf(':');
+            string? eventName = key[(idx + 1)..];
 
-            if (Enum.TryParse<LogEventLevel>(value, out var level))
+            if (Enum.TryParse<LogEventLevel>(value, out LogEventLevel level))
             {
-                builder.MinimumLevel.Override(eventName, level);
+                _ = builder.MinimumLevel.Override(eventName, level);
             }
         }
 

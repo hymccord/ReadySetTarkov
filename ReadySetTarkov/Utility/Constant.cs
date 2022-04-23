@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace ReadySetTarkov.Utility
+namespace ReadySetTarkov.Utility;
+
+internal static class Constant
 {
-    internal static class Constant
-    {
-        public static readonly string ProgramDirectory = AppContext.BaseDirectory;
-    }
+    public static readonly string ProgramDirectory = AppContext.BaseDirectory;
 }

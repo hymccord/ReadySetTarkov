@@ -2,32 +2,31 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-namespace ReadySetTarkov.LogReader
+namespace ReadySetTarkov.LogReader;
+
+[DebuggerDisplay("{Line}")]
+public class LogLine
 {
-    [DebuggerDisplay("{Line}")]
-    public class LogLine
+    public LogLine(string ns, string line)
     {
-        public LogLine(string ns, string line)
+        Namespace = ns;
+        Line = line;
+        var regex = new Regex(@"^(?<date>.*?)\|(?<gameversion>.*?)\|(?<level>.*?)\|(?<logger>.*?)\|(?<message>.*)");
+        Match? match = regex.Match(line);
+        if (match.Success)
         {
-            Namespace = ns;
-            Line = line;
-            var regex = new Regex(@"^(?<date>.*?)\|(?<gameversion>.*?)\|(?<level>.*?)\|(?<logger>.*?)\|(?<message>.*)");
-            var match = regex.Match(line);
-            if (match.Success)
+            string? ts = match.Groups["date"].Value;
+            if (DateTime.TryParse(ts, out DateTime time))
             {
-                var ts = match.Groups["date"].Value;
-                if (DateTime.TryParse(ts, out var time))
-                {
-                    Time = time;
-                }
-
-                LineContent = match.Groups["message"].Value;
+                Time = time;
             }
-        }
 
-        public string Namespace { get; set; }
-        public DateTime Time { get; } = DateTime.Now;
-        public string Line { get; set; }
-        public string? LineContent { get; set; }
+            LineContent = match.Groups["message"].Value;
+        }
     }
+
+    public string Namespace { get; set; }
+    public DateTime Time { get; } = DateTime.Now;
+    public string Line { get; set; }
+    public string? LineContent { get; set; }
 }

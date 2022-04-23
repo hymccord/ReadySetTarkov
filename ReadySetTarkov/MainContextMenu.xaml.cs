@@ -1,13 +1,9 @@
-﻿namespace ReadySetTarkov
+﻿namespace ReadySetTarkov;
+
+/// <summary>
+/// Interaction logic for MainContextMenu.xaml
+/// </summary>
+public partial class MainContextMenu
 {
-    /// <summary>
-    /// Interaction logic for MainContextMenu.xaml
-    /// </summary>
-    public partial class MainContextMenu
-    {
-        public MainContextMenu()
-        {
-            InitializeComponent();
-        }
-    }
+    public MainContextMenu() => InitializeComponent();
 }

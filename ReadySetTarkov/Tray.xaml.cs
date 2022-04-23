@@ -1,35 +1,36 @@
 ﻿using System.Threading.Tasks;
+
 using Hardcodet.Wpf.TaskbarNotification;
+
 using Microsoft.VisualStudio.Threading;
 
-namespace ReadySetTarkov
+namespace ReadySetTarkov;
+
+/// <summary>
+/// Interaction logic for Tray.xaml
+/// </summary>
+public partial class Tray : INotifyIcon
 {
-    /// <summary>
-    /// Interaction logic for Tray.xaml
-    /// </summary>
-    public partial class Tray : INotifyIcon
+    private readonly JoinableTaskFactory _joinableTaskFactory;
+
+    public Tray(JoinableTaskFactory joinableTaskFactory, ITray viewModel)
     {
-        private readonly JoinableTaskFactory _joinableTaskFactory;
+        DataContext = viewModel;
+        InitializeComponent();
+        _joinableTaskFactory = joinableTaskFactory;
+    }
 
-        public Tray(JoinableTaskFactory joinableTaskFactory, ITray viewModel)
-        {
-            DataContext = viewModel;
-            InitializeComponent();
-            _joinableTaskFactory = joinableTaskFactory;
-        }
+    async Task INotifyIcon.CloseBalloonTipAsync()
+    {
+        await _joinableTaskFactory.SwitchToMainThreadAsync();
 
-        async Task INotifyIcon.CloseBalloonTipAsync()
-        {
-            await _joinableTaskFactory.SwitchToMainThreadAsync();
+        CloseBalloon();
+    }
 
-            CloseBalloon();
-        }
+    async Task INotifyIcon.ShowBalloonTipAsync(string title, string message, BalloonIcon icon)
+    {
+        await _joinableTaskFactory.SwitchToMainThreadAsync();
 
-        async Task INotifyIcon.ShowBalloonTipAsync(string title, string message, BalloonIcon icon)
-        {
-            await _joinableTaskFactory.SwitchToMainThreadAsync();
-
-            ShowBalloonTip(title, message, icon);
-        }
+        ShowBalloonTip(title, message, icon);
     }
 }

@@ -1,56 +1,55 @@
-﻿namespace ReadySetTarkov.Tarkov
+﻿namespace ReadySetTarkov.Tarkov;
+
+internal class TarkovStateManager : ITarkovStateManager
 {
-    internal class TarkovStateManager : ITarkovStateManager
+    private readonly ITarkovGame _game;
+    private readonly ITray _tray;
+
+    public TarkovStateManager(ITarkovGame game, ITray tray)
     {
-        private readonly ITarkovGame _game;
-        private readonly ITray _tray;
+        _game = game;
+        _tray = tray;
+    }
 
-        public TarkovStateManager(ITarkovGame game, ITray tray)
+    public void SetGameState(GameState gameState)
+    {
+        _game.GameState = gameState;
+
+        if (gameState is GameState.None or GameState.Lobby)
         {
-            _game = game;
-            _tray = tray;
+            _tray.SetIcon("RST_red.ico");
         }
 
-        public void SetGameState(GameState gameState)
+        if (gameState == GameState.InGame)
         {
-            _game.GameState = gameState;
-
-            if (gameState == GameState.None || gameState == GameState.Lobby)
-            {
-                _tray.SetIcon("RST_red.ico");
-            }
-
-            if (gameState == GameState.InGame)
-            {
-                _tray.SetStatus("In a match. GLHF!");
-            }
-        }
-
-        public void SetMatchmakingState(MatchmakingState matchmakingState)
-        {
-            _game.MatchmakingState = matchmakingState;
-
-            _tray.SetStatus(matchmakingState switch
-            {
-                MatchmakingState.LoadingMap => "Loading Map",
-                MatchmakingState.LoadingData => "Loading Data",
-                MatchmakingState.Matching => "Matching...",
-                MatchmakingState.CreatingPools => "Creating loot pools...",
-                MatchmakingState.Waiting => "Waiting for players...",
-                MatchmakingState.Starting => "Match starting!",
-                _ => "N/A"
-            });
-
-            if (matchmakingState == MatchmakingState.Starting)
-            {
-                _tray.SetIcon("RST_green.ico");
-            }
+            _tray.SetStatus("In a match. GLHF!");
         }
     }
 
-    internal interface ITarkovStateManager
+    public void SetMatchmakingState(MatchmakingState matchmakingState)
     {
-        void SetGameState(GameState gameState);
-        void SetMatchmakingState(MatchmakingState matchmakingState);
+        _game.MatchmakingState = matchmakingState;
+
+        _tray.SetStatus(matchmakingState switch
+        {
+            MatchmakingState.LoadingMap => "Loading Map",
+            MatchmakingState.LoadingData => "Loading Data",
+            MatchmakingState.Matching => "Matching...",
+            MatchmakingState.CreatingPools => "Creating loot pools...",
+            MatchmakingState.Waiting => "Waiting for players...",
+            MatchmakingState.Starting => "Match starting!",
+            _ => "N/A"
+        });
+
+        if (matchmakingState == MatchmakingState.Starting)
+        {
+            _tray.SetIcon("RST_green.ico");
+        }
     }
+}
+
+internal interface ITarkovStateManager
+{
+    void SetGameState(GameState gameState);
+    void SetMatchmakingState(MatchmakingState matchmakingState);
 }
