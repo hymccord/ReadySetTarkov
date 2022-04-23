@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Media;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Utility;
 
@@ -8,7 +10,7 @@ using static ReadySetTarkov.Properties.Resources;
 
 namespace ReadySetTarkov.Tarkov
 {
-    internal class GameEventHandler
+    internal class GameEventHandler : IHostedService
     {
         private readonly ISettingsProvider _settingsProvider;
         private readonly IGameEvents _tarkov;
@@ -67,6 +69,16 @@ namespace ReadySetTarkov.Tarkov
                 var player = new SoundPlayer(error);
                 player.Play();
             }
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }

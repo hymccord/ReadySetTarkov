@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Hardcodet.Wpf.TaskbarNotification;
-using ReadySetTarkov.Utility;
+using Microsoft.VisualStudio.Threading;
 
 namespace ReadySetTarkov
 {
@@ -9,22 +9,25 @@ namespace ReadySetTarkov
     /// </summary>
     public partial class Tray : INotifyIcon
     {
-        public Tray(ITray viewModel)
+        private readonly JoinableTaskFactory _joinableTaskFactory;
+
+        public Tray(JoinableTaskFactory joinableTaskFactory, ITray viewModel)
         {
             DataContext = viewModel;
             InitializeComponent();
+            _joinableTaskFactory = joinableTaskFactory;
         }
 
         async Task INotifyIcon.CloseBalloonTipAsync()
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskFactory.SwitchToMainThreadAsync();
 
             CloseBalloon();
         }
 
         async Task INotifyIcon.ShowBalloonTipAsync(string title, string message, BalloonIcon icon)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskFactory.SwitchToMainThreadAsync();
 
             ShowBalloonTip(title, message, icon);
         }

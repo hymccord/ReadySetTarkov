@@ -26,7 +26,12 @@ namespace ReadySetTarkov.LogReader
 
         public event EventHandler? LogDirectoryCreated;
 
-        public LogWatcherManager(ITarkovGame game, ITray tray, INativeMethods nativeMethods)
+        public LogWatcherManager(
+            ApplicationHandler applicationLineHandler,
+            ITarkovStateManager gameStateManager,
+            ITarkovGame game,
+            ITray tray,
+            INativeMethods nativeMethods)
         {
             _logWatcher = new LogWatcher(new[]
             {
@@ -37,8 +42,8 @@ namespace ReadySetTarkov.LogReader
             _game = game;
             _tray = tray;
 
-            _gameStateManager = new TarkovStateManager(game, tray);
-            _applicationLineHandler = new ApplicationHandler(_gameStateManager);
+            _gameStateManager = gameStateManager;
+            _applicationLineHandler = applicationLineHandler;
             _nativeMethods = nativeMethods;
         }
 

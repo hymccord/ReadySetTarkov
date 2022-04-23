@@ -2,48 +2,46 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ReadySetTarkov.LogReader;
-using ReadySetTarkov.Settings;
-using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
 
 namespace ReadySetTarkov
 {
-    internal class Core
+    internal class Core : ICoreService
     {
-#pragma warning disable IDE0052 // Remove unread private members
-        private readonly ISettingsProvider _settingsProvider;
+        private readonly ILogger<Core> _logger;
         private readonly INativeMethods _nativeMethods;
         private readonly LogWatcherManager _logWatcherManager;
-        private readonly GameEventHandler _gameEventHandler;
-#pragma warning restore IDE0052 // Remove unread private members
 
         private CancellationTokenSource? CancellationTokenSource { get; set; }
 
+        private CancellationToken _hostCancellationToken = default;
         private CancellationToken? MainCancellationToken => CancellationTokenSource?.Token;
         private Task? _gameFinderTask;
         private Task? _logManagerTask;
 
-        public Core(
-            Game game,
-            ISettingsProvider settingsProvider,
+        public Core(ILogger<Core> logger,
             INativeMethods nativeMethods,
-            ITray tray)
+            LogWatcherManager logWatcherManager
+            )
         {
-            _settingsProvider = settingsProvider;
+            _logger = logger;
             _nativeMethods = nativeMethods;
-            _gameEventHandler = new GameEventHandler(settingsProvider, game, nativeMethods);
-            _logWatcherManager = new LogWatcherManager(game, tray, nativeMethods);
+            _logWatcherManager = logWatcherManager;
             _logWatcherManager.LogDirectoryCreated += HandleLogDirectoryCreated;   
         }
 
-        public void Start()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
+            _hostCancellationToken = cancellationToken;
             InitializeWatcherTasks();
+
+            return Task.CompletedTask;
         }
 
-        public async Task ShutdownAsync()
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             CancellationTokenSource?.Cancel();
             await (_logManagerTask ?? Task.CompletedTask).ConfigureAwait(false);
@@ -62,8 +60,9 @@ namespace ReadySetTarkov
                 }
                 else if (gameRunning)
                 {
+                    _logger.LogDebug("Game has stopped");
                     // Dont await this one. Can get a cycle of awaiting.
-                    // s_gameFinderTask (MonitorForGame())6 -> await Reset() -> await s_gameFinderTask()
+                    // s_gameFinderTask (MonitorForGame()) -> await Reset() -> await s_gameFinderTask()
                     _ = ResetAsync().ConfigureAwait(false);
                 }
 
@@ -73,12 +72,15 @@ namespace ReadySetTarkov
 
         private void InitializeWatcherTasks()
         {
-            CancellationTokenSource = new CancellationTokenSource();
+            Debug.WriteLine("Starting watchers");
+            _logger.LogDebug("Starting watchers");
+
+            CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_hostCancellationToken);
             _gameFinderTask = MonitorForGameAsync(CancellationTokenSource.Token);
             _logManagerTask = _logWatcherManager.StartAsync(CancellationTokenSource.Token);
         }
 
-        internal async Task ResetAsync()
+        public async Task ResetAsync()
         {
             if (MainCancellationToken.HasValue && MainCancellationToken.Value.IsCancellationRequested)
             {
@@ -98,7 +100,6 @@ namespace ReadySetTarkov
                 TaskContinuationOptions.None,
                 TaskScheduler.Default)
             .ConfigureAwait(false);
-            Debug.WriteLine("");
         }
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
@@ -107,6 +108,11 @@ namespace ReadySetTarkov
         {
             await ResetAsync().ConfigureAwait(false);
         }
+    }
+
+    public interface ICoreService : IHostedService
+    {
+        Task ResetAsync();
     }
 }
 

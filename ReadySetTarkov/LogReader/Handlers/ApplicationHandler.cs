@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-
+using Microsoft.Extensions.Logging;
 using ReadySetTarkov.Tarkov;
 
 namespace ReadySetTarkov.LogReader.Handlers
@@ -8,10 +8,12 @@ namespace ReadySetTarkov.LogReader.Handlers
     {
         private static readonly Regex s_gameRegex = new(@"^Game(?<action>\w+)");
         private static readonly Regex s_traceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)");
+        private readonly ILogger<ApplicationHandler> _logger;
         private readonly ITarkovStateManager _gameStateManager;
 
-        public ApplicationHandler(ITarkovStateManager gameStateManager)
+        public ApplicationHandler(ILogger<ApplicationHandler> logger, ITarkovStateManager gameStateManager)
         {
+            _logger = logger;
             _gameStateManager = gameStateManager;
         }
 
@@ -24,6 +26,8 @@ namespace ReadySetTarkov.LogReader.Handlers
 
             if (s_gameRegex.IsMatch(line.LineContent))
             {
+                _logger.LogDebug("Game: {Content}", line.LineContent);
+                // Game[Pooled|Runned|Spawn|Spawned|Starting|Started]
                 var match = s_gameRegex.Match(line.LineContent);
                 switch (match.Groups["action"].Value)
                 {

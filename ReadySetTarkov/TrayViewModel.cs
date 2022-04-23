@@ -1,22 +1,26 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Hosting;
 using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov
 {
-    public class TrayViewModel : BaseViewModel, ITray, INotifyPropertyChanged
+    [ObservableObject]
+    public partial class TrayViewModel : ITray
     {
         private readonly ISettingsProvider _settingsProvider;
+        private readonly Lazy<ICoreService> _coreService;
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private string _currentIcon = string.Empty;
         private string _status = string.Empty;
 
-        public TrayViewModel(ISettingsProvider settingsProvider)
+        public TrayViewModel(ISettingsProvider settingsProvider, Lazy<ICoreService> coreService, IHostApplicationLifetime hostApplicationLifetime)
         {
             _settingsProvider = settingsProvider;
+            _coreService = coreService;
+            _hostApplicationLifetime = hostApplicationLifetime;
             TimeLeftOptions = new ObservableCollection<TimeLeftOption>
             {
                 new TimeLeftOption(settingsProvider, 20),
@@ -28,15 +32,6 @@ namespace ReadySetTarkov
 
             SetIcon("rst_red.ico");
         }
-
-        private ICommand? _settingsCommand;
-        public ICommand SettingsCommand => _settingsCommand ??= new DelegateCommand(HandleSettings);
-
-        private ICommand? _resetCommand;
-        public ICommand ResetCommand => _resetCommand ??= new DelegateCommand(Reset);
-
-        private ICommand? _exitCommand;
-        public ICommand ExitCommand => _exitCommand ??= new DelegateCommand(Exit);
 
         public ObservableCollection<TimeLeftOption> TimeLeftOptions { get; }
 
@@ -87,17 +82,20 @@ namespace ReadySetTarkov
             Status = text;
         }
 
+        [ICommand]
         private void Reset()
         {
-            _ = App.GlobalProvider.GetRequiredService<Core>().ResetAsync();
+            _ = _coreService.Value.ResetAsync();
         }
 
+        [ICommand]
         private void Exit()
         {
-            Application.Current.Shutdown();
+            _hostApplicationLifetime.StopApplication();
         }
 
-        public class TimeLeftOption : BaseViewModel
+        [ObservableObject]
+        public partial class TimeLeftOption
         {
             private readonly ISettingsProvider _settingsProvider;
 
@@ -106,7 +104,6 @@ namespace ReadySetTarkov
                 _settingsProvider = settingsProvider;
                 Header = $"{value}s left";
                 Value = value;
-                SetTimeLeftCommand = new DelegateCommand(HandleSetTimeLeft);
             }
 
             public string Header { get; }
@@ -122,37 +119,12 @@ namespace ReadySetTarkov
                     }
                 }
             }
-            public ICommand SetTimeLeftCommand { get; }
 
-            private void HandleSetTimeLeft()
+            [ICommand]
+            private void SetTimeLeft()
             {
                 IsChecked = !IsChecked;
             }
-        }
-
-        private void HandleSettings()
-        {
-        }
-    }
-
-    public class BaseViewModel : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void NotifyPropertyChanged([CallerMemberName]string? propertyName = default)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName]string? propertyName = default)
-        {
-            if (!Equals(storage, value))
-            {
-                storage = value;
-                NotifyPropertyChanged(propertyName);
-            }
-
-            return false;
         }
     }
 }

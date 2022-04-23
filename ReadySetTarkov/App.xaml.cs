@@ -1,111 +1,96 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
+using DryIoc.Microsoft.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.Threading;
+using Microsoft.Extensions.Hosting;
 using ReadySetTarkov.Settings;
-using ReadySetTarkov.Tarkov;
-using ReadySetTarkov.Utility;
+using Serilog;
+using Serilog.Events;
 
-namespace ReadySetTarkov
+namespace ReadySetTarkov;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    private readonly IHost _host;
+    private bool _exitHandled = false;
+    private INotifyIcon? _icon;
+
+    public App()
     {
-        private bool _exitHandled = false;
-        private readonly JoinableTaskContext _joinableTaskContext;
-        private Core? _core;
-        private INotifyIcon? _icon;
+        const string LogFilePath = "ready-set-tarkov.log";
 
-        public static IServiceProvider GlobalProvider { get; private set; } = default!;
+        InstallExceptionHandlers();
 
-        public App()
+        var logSettings = new LogSettings(true);
+        _host = Host.CreateDefaultBuilder()
+            .UseServiceProviderFactory(new DryIocServiceProviderFactory())
+            .AddServices()
+            .UseSerilog((context, loggerConfiguration) => loggerConfiguration
+                .MinimumLevelFromConfiguration(context.Configuration.GetSection("Logging:Loglevel"))
+                .MinimumLevel.Override("System", LogEventLevel.Warning)
+                .MinimumLevel.Is(LogEventLevel.Verbose)
+                .WriteTo.Console(levelSwitch: logSettings.Console)
+                .WriteTo.File(LogFilePath, levelSwitch: logSettings.File))
+            .Build();
+    }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        _ = _host.StartAsync();
+        _icon = _host.Services.GetRequiredService<INotifyIcon>();
+
+        RegisterExitEvents();
+    }
+
+    private void RegisterExitEvents()
+    {
+        AppDomain.CurrentDomain.ProcessExit += (s, e) => Exiting();
+        Current.Exit += (s, e) => Exiting();
+        Current.SessionEnding += (s, e) => Exiting();
+    }
+
+    private void Exiting()
+    {
+        if (_exitHandled)
         {
-            InstallExceptionHandlers();
-
-            _joinableTaskContext = new JoinableTaskContext(Thread.CurrentThread, new DispatcherSynchronizationContext());
-            GlobalProvider = ConfigureServices();
+            return;
         }
 
-        private IServiceProvider ConfigureServices()
+        _exitHandled = true;
+        _host.Services.GetRequiredService<ISettingsProvider>().Save();
+    }
+
+    private void InstallExceptionHandlers()
+    {
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            LogUnhandledExceptionAsync((Exception)e.ExceptionObject, nameof(AppDomain.CurrentDomain.UnhandledException));
+        DispatcherUnhandledException += (s, e) =>
         {
-            var services = new ServiceCollection();
-
-            services.AddSingleton<Core>();
-            services.AddSingleton<Game>();
-            services.AddSingleton<INotifyIcon, Tray>();
-            services.AddSingleton<ITray, TrayViewModel>();
-            services.AddSingleton<ISettingsProvider, SettingsProvider>();
-            services.AddSingleton<JoinableTaskContext>(_joinableTaskContext);
-            services.AddSingleton<JoinableTaskFactory>(_joinableTaskContext.Factory);
-
-            services.AddTransient<INativeMethods, NativeMethods>();
-            services.AddTransient<IKernel32, Kernel32>();
-            services.AddTransient<IUser32, User32>();
-
-            return services.BuildServiceProvider();
-        }
-
-        protected override void OnStartup(StartupEventArgs e)
+            LogUnhandledExceptionAsync(e.Exception, nameof(DispatcherUnhandledException));
+            e.Handled = true;
+        };
+        TaskScheduler.UnobservedTaskException += (s, e) =>
         {
-            base.OnStartup(e);
-
-            _core = GlobalProvider.GetRequiredService<Core>();
-            _icon = GlobalProvider.GetRequiredService<INotifyIcon>();
-            _core.Start();
-
-            RegisterExitEvents();
-        }
-
-        private void RegisterExitEvents()
-        {
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Exiting();
-            Current.Exit += (s, e) => Exiting();
-            Current.SessionEnding += (s, e) => Exiting();
-        }
-
-        private void Exiting()
-        {
-            if (_exitHandled)
-            {
-                return;
-            }
-
-            GlobalProvider.GetRequiredService<ISettingsProvider>().Save();
-
-            _exitHandled = true;
-        }
-
-        private void InstallExceptionHandlers()
-        {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-                LogUnhandledExceptionAsync((Exception)e.ExceptionObject, nameof(AppDomain.CurrentDomain.UnhandledException));
-            DispatcherUnhandledException += (s, e) =>
-            {
-                LogUnhandledExceptionAsync(e.Exception, nameof(DispatcherUnhandledException));
-                e.Handled = true;
-            };
-            TaskScheduler.UnobservedTaskException += (s, e) =>
-            {
-                LogUnhandledExceptionAsync(e.Exception, nameof(TaskScheduler.UnobservedTaskException));
-                e.SetObserved();
-            };
-        }
+            LogUnhandledExceptionAsync(e.Exception, nameof(TaskScheduler.UnobservedTaskException));
+            e.SetObserved();
+        };
+    }
 
 #pragma warning disable VSTHRD100, VSTHRD200
-        private async void LogUnhandledExceptionAsync(Exception ex, string sources)
+    private async void LogUnhandledExceptionAsync(Exception ex, string sources)
 #pragma warning restore VSTHRD100, VSTHRD200
-        {
+    {
 #if DEBUG
-            await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
+        await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
 #endif
-            await Task.Delay(5000);
+        await Task.Delay(5000);
 
 #if DEBUG
-            await _icon.CloseBalloonTipAsync();
+        await _icon.CloseBalloonTipAsync();
 #endif
-        }
     }
 }
 
