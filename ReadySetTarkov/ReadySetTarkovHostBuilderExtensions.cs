@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows.Threading;
 
@@ -8,6 +10,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Threading;
 
+using ReadySetTarkov.Contracts.Services;
+using ReadySetTarkov.Contracts.Views;
 using ReadySetTarkov.LogReader;
 using ReadySetTarkov.LogReader.Handlers.Application;
 using ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
@@ -15,6 +19,8 @@ using ReadySetTarkov.Services;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
+using ReadySetTarkov.ViewModels;
+using ReadySetTarkov.Views;
 
 using Serilog;
 using Serilog.Core;
@@ -28,11 +34,12 @@ public static class ReadySetTarkovHostBuilderExtensions
     {
         _ = hostBuilder.ConfigureServices(services =>
         {
-            _ = services.AddSingleton<ICoreService, Core>();
-            _ = services.AddSingleton<IHostedService>(s => s.GetRequiredService<ICoreService>());
+            _ = services.AddHostedService<ApplicationHostService>();
+            _ = services.AddHostedService<Core>();
             _ = services.AddHostedService<GameEventHandler>();
             _ = services.AddHostedService<ShutdownHandler>();
 
+            _ = services.AddSingleton<ICoreService>(s => s.GetRequiredService<Core>());
             _ = services.AddSingleton<Game>();
             _ = services.AddSingleton<ITarkovGame>(s => s.GetRequiredService<Game>());
             _ = services.AddSingleton<IGameEvents>(s => s.GetRequiredService<Game>());
@@ -42,6 +49,8 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddSingleton<ITarkovStateManager, TarkovStateManager>();
             _ = services.AddSingleton<LogWatcherManager>();
             _ = services.AddSingleton<LogWatcher>();
+            _ = services.AddSingleton<IPageService, PageService>();
+            _ = services.AddSingleton<INavigationService, NavigationService>();
 
             var joinableTaskContext = new JoinableTaskContext(Thread.CurrentThread, new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher, DispatcherPriority.Background));
             _ = services.AddSingleton(joinableTaskContext);
@@ -54,11 +63,45 @@ public static class ReadySetTarkovHostBuilderExtensions
             // Tarkov Log Watchers
             _ = services.AddSingleton<ILogFileHandlerProvider, ApplicationLogFileHandlerProvider>();
             _ = services.AddTransient<ApplicationHandler>();
-            _ = services.AddSingleton<IApplicationLogLineContentHandler, GameLineHandler>();
-            _ = services.AddSingleton<IApplicationLogLineContentHandler, LocationLoadedLineHandler>();
-            _ = services.AddSingleton<IApplicationLogLineContentHandler, NetworkGameAbortedLineHandler>();
-            _ = services.AddSingleton<IApplicationLogLineContentHandler, SelectProfileLineHandler>();
-            _ = services.AddSingleton<IApplicationLogLineContentHandler, TraceNetworkLineHandler>();
+            //_ = services.AddSingleton<IApplicationLogLineContentHandler, GameLineHandler>();
+            //_ = services.AddSingleton<IApplicationLogLineContentHandler, LocationLoadedLineHandler>();
+            //_ = services.AddSingleton<IApplicationLogLineContentHandler, NetworkGameAbortedLineHandler>();
+            //_ = services.AddSingleton<IApplicationLogLineContentHandler, SelectProfileLineHandler>();
+            //_ = services.AddSingleton<IApplicationLogLineContentHandler, TraceNetworkLineHandler>();
+
+            // Views and ViewModels
+            _ = services.AddTransient<IShellWindow, MainWindow>();
+            _ = services.AddTransient<MainWindowViewModel>();
+
+            _ = services.AddTransient<MainViewModel>();
+            _ = services.AddTransient<MainPage>();
+
+            _ = services.AddTransient<SettingsViewModel>();
+            _ = services.AddTransient<SettingsPage>();
+
+            _ = services.AddTransient<ActionsViewModel>();
+            _ = services.AddTransient<ActionsPage>();
+
+            _ = services.AddTransient<TriggersViewModel>();
+            _ = services.AddTransient<TriggersPage>();
+
+            // Triggers
+            IEnumerable<Type> triggerTypes = typeof(Core).Assembly.GetTypes()
+                .Where(t => !t.IsInterface && !t.IsAbstract)
+                .Where(t => t.IsAssignableTo(typeof(ITrigger)));
+            foreach (Type triggerType in triggerTypes)
+            {
+                _ = services.AddTransient(typeof(ITrigger), triggerType);
+            }
+
+            // Actions
+            IEnumerable<Type> actionTypes = typeof(Core).Assembly.GetTypes()
+                .Where(t => !t.IsInterface && !t.IsAbstract)
+                .Where(t => t.IsAssignableTo(typeof(IAction)));
+            foreach (Type actionType in actionTypes)
+            {
+                _ = services.AddTransient(typeof(IAction), actionType);
+            }
         });
 
         return hostBuilder;

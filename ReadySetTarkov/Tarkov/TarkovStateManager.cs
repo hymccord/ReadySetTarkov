@@ -44,6 +44,7 @@ internal class TarkovStateManager : ITarkovStateManager
             MatchmakingState.CreatingPools => "Creating loot pools...",
             MatchmakingState.Waiting => "Waiting for players...",
             MatchmakingState.Starting => "Match starting!",
+            MatchmakingState.Started => "Match started!",
             _ => "N/A"
         });
 

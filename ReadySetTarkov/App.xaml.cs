@@ -6,7 +6,8 @@ using DryIoc.Microsoft.DependencyInjection;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using Microsoft.VisualStudio.Threading;
+using ReadySetTarkov.Contracts.Views;
 using ReadySetTarkov.Settings;
 
 using Serilog;
@@ -18,10 +19,11 @@ public partial class App : Application
 {
     private readonly IHost _host;
     private bool _exitHandled = false;
-    private INotifyIcon? _icon;
 
     public App()
     {
+        InitializeComponent();
+
         const string LogFilePath = "ready-set-tarkov.log";
 
         InstallExceptionHandlers();
@@ -44,25 +46,21 @@ public partial class App : Application
         base.OnStartup(e);
 
         _ = _host.StartAsync();
-        _icon = _host.Services.GetRequiredService<INotifyIcon>();
-
-        RegisterExitEvents();
     }
 
-    private void RegisterExitEvents()
-    {
-        Current.Exit += (s, e) => Exiting();
-    }
-
-    private void Exiting()
+    private void OnExit(object sender, ExitEventArgs e)
     {
         if (_exitHandled)
         {
             return;
         }
-
         _exitHandled = true;
-        _host.Services.GetRequiredService<ISettingsProvider>().Save();
+
+        _host.Services.GetRequiredService<JoinableTaskFactory>().Run(async () =>
+        {
+            await _host.StopAsync();
+        });
+        _host.Dispose();
     }
 
     private void InstallExceptionHandlers()
@@ -86,9 +84,9 @@ public partial class App : Application
 #pragma warning restore VSTHRD100, VSTHRD200
     {
 #if DEBUG
-        await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
-        await Task.Delay(5000);
-        await _icon.CloseBalloonTipAsync();
+        //await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
+        //await Task.Delay(5000);
+        //await _icon.CloseBalloonTipAsync();
 #endif
     }
 }

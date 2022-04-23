@@ -8,10 +8,7 @@ internal class Program
     [STAThread]
     private static void Main()
     {
-        var application = new App
-        {
-            ShutdownMode = ShutdownMode.OnExplicitShutdown
-        };
+        var application = new App();
         _ = application.Run();
     }
 }

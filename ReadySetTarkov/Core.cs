@@ -52,23 +52,30 @@ internal class Core : ICoreService
     private async Task MonitorForGameAsync(CancellationToken cancellationToken)
     {
         bool gameRunning = false;
-        while (true)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (_nativeMethods.GetTarkovWindow() != IntPtr.Zero)
+            while (true)
             {
-                gameRunning = true;
-            }
-            else if (gameRunning)
-            {
-                _logger.LogDebug("Game has stopped");
-                // Dont await this one. Can get a cycle of awaiting.
-                // s_gameFinderTask (MonitorForGame()) -> await Reset() -> await s_gameFinderTask()
-                _ = ResetAsync().ConfigureAwait(false);
-            }
+                cancellationToken.ThrowIfCancellationRequested();
 
-            await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+                if (_nativeMethods.GetTarkovWindow() != IntPtr.Zero)
+                {
+                    gameRunning = true;
+                }
+                else if (gameRunning)
+                {
+                    _logger.LogDebug("Game has stopped");
+                    // Dont await this one. Can get a cycle of awaiting.
+                    // s_gameFinderTask (MonitorForGame()) -> await Reset() -> await s_gameFinderTask()
+                    _ = ResetAsync().ConfigureAwait(false);
+                }
+
+                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogDebug("Monitoring for game was cancelled.");
         }
     }
 
@@ -77,8 +84,8 @@ internal class Core : ICoreService
         _logger.LogDebug("Starting watchers");
 
         CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_hostCancellationToken);
-        _gameFinderTask = MonitorForGameAsync(CancellationTokenSource.Token);
-        _logManagerTask = _logWatcherManager.StartAsync(CancellationTokenSource.Token);
+        _gameFinderTask = Task.Run(async () => await MonitorForGameAsync(CancellationTokenSource.Token), CancellationTokenSource.Token);
+        _logManagerTask = Task.Run(async () => await _logWatcherManager.StartAsync(CancellationTokenSource.Token), CancellationTokenSource.Token);
     }
 
     public async Task ResetAsync()

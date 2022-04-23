@@ -1,0 +1,241 @@
+﻿<Page
+    x:Class="ReadySetTarkov.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dd="urn:gong-wpf-dragdrop"
+    xmlns:local="clr-namespace:ReadySetTarkov.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:ReadySetTarkov.ViewModels"
+    Title="MainPage"
+    d:DataContext="{d:DesignInstance Type={x:Type vm:MainViewModel}}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <Style
+            x:Key="DragHandleContainerStyle"
+            BasedOn="{StaticResource MaterialDesignCardsListBoxItem}"
+            TargetType="ListBoxItem" />
+    </Page.Resources>
+    <Grid x:Name="rootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <!--  Configured Tasks  -->
+        <Border
+            Margin="4"
+            BorderBrush="{DynamicResource SecondaryHueMidBrush}"
+            BorderThickness="1"
+            CornerRadius="3">
+            <Grid Margin="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}" Text="Configured Tasks" />
+                <ScrollViewer
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl
+                        x:Name="daLB"
+                        MinHeight="10"
+                        Padding="1"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        d:ItemsSource="{d:SampleData ItemCount=3}"
+                        dd:DragDrop.DropHandler="{Binding}"
+                        dd:DragDrop.IsDropTarget="True"
+                        materialDesign:ListBoxItemAssist.ShowSelection="False"
+                        Background="{DynamicResource MaterialDesignDarkBackground}"
+                        ItemsSource="{Binding ConfiguredEvents}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card
+                                    Width="{Binding ElementName=daLB, Path=Width}"
+                                    Margin="4"
+                                    HorizontalAlignment="Stretch">
+                                    <StackPanel Margin="4">
+                                        <Grid>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="18"
+                                                Text="{Binding Trigger.TriggerKey, StringFormat='{}{0}'}" />
+                                            <Button
+                                                Width="28"
+                                                Height="{Binding Width, RelativeSource={RelativeSource Self}}"
+                                                Padding="0"
+                                                HorizontalAlignment="Right"
+                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}">
+                                                <materialDesign:PackIcon Kind="Delete" />
+                                            </Button>
+                                        </Grid>
+                                        <Separator Margin="-2,-2,0,-2" Style="{StaticResource MaterialDesignLightSeparator}" />
+                                        <DockPanel>
+                                            <!--<Border
+                                                Margin="2"
+                                                BorderBrush="{StaticResource MaterialDesignLightForeground}"
+                                                BorderThickness="1"
+                                                DockPanel.Dock="Bottom">
+                                                <TextBlock Foreground="{StaticResource MaterialDesignLightBackground}" Text="Drag actions here..." />
+                                            </Border>-->
+                                            <ItemsControl
+                                                Margin="10,0,0,0"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                dd:DragDrop.DropHandler="{Binding DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                dd:DragDrop.IsDragSource="True"
+                                                dd:DragDrop.IsDropTarget="True"
+                                                dd:DragDrop.UseDefaultDragAdorner="True"
+                                                Background="{DynamicResource MaterialDesignDarkBackground}"
+                                                BorderThickness="0"
+                                                IsHitTestVisible="True"
+                                                ItemsSource="{Binding TriggerActions}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <DockPanel Margin="0,2" LastChildFill="False">
+                                                            <materialDesign:PackIcon
+                                                                Width="24"
+                                                                Height="24"
+                                                                Kind="Drag" />
+                                                            <ToggleButton
+                                                                x:Name="tbConfiguredTriggerEnabled"
+                                                                Margin="0,0,4,0"
+                                                                IsChecked="True"
+                                                                Style="{StaticResource MaterialDesignSwitchAccentToggleButton}" />
+                                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                                            <Button
+                                                                Width="20"
+                                                                Height="{Binding Width, RelativeSource={RelativeSource Self}}"
+                                                                Margin="0,0,3,0"
+                                                                Padding="0"
+                                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                DockPanel.Dock="Right">
+                                                                <materialDesign:PackIcon
+                                                                    Width="{Binding Width, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                    Height="{Binding Height, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                    Kind="Remove" />
+                                                            </Button>
+                                                        </DockPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DockPanel>
+                                    </StackPanel>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <!--  Triggers  -->
+            <Border
+                Margin="4"
+                BorderBrush="{DynamicResource SecondaryHueMidBrush}"
+                BorderThickness="1"
+                CornerRadius="3">
+                <DockPanel DataContext="{Binding TriggerSource}">
+                    <Grid DockPanel.Dock="Top">
+                        <StackPanel Margin="4" Orientation="Horizontal">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                Kind="LightningBolt" />
+                            <TextBlock
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Triggers" />
+                        </StackPanel>
+                    </Grid>
+                    <ItemsControl
+                        d:ItemsSource="{d:SampleData ItemCount=5}"
+                        dd:DragDrop.IsDragSource="true"
+                        dd:DragDrop.UseDefaultDragAdorner="true"
+                        ItemsSource="{Binding DefaultTriggers}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card Margin="4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="24"
+                                            Height="24"
+                                            VerticalAlignment="Center"
+                                            Kind="Drag" />
+                                        <TextBlock
+                                            Margin="8,0,8,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            Text="{Binding TriggerKey}" />
+                                    </StackPanel>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+
+            <!--  Actions  -->
+            <Border
+                Grid.Row="1"
+                Margin="4"
+                BorderBrush="{DynamicResource SecondaryHueMidBrush}"
+                BorderThickness="1"
+                CornerRadius="3">
+                <DockPanel DataContext="{Binding ActionSource}">
+                    <Grid DockPanel.Dock="Top">
+                        <StackPanel Margin="4" Orientation="Horizontal">
+                            <materialDesign:PackIcon
+                                Width="24"
+                                Height="24"
+                                Kind="ClockTimeFourOutline" />
+                            <TextBlock
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Actions" />
+                        </StackPanel>
+                    </Grid>
+                    <ItemsControl
+                        d:ItemsSource="{d:SampleData ItemCount=5}"
+                        dd:DragDrop.IsDragSource="true"
+                        dd:DragDrop.UseDefaultDragAdorner="true"
+                        ItemsSource="{Binding DefaultActions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Card Margin="4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="24"
+                                            Height="24"
+                                            VerticalAlignment="Center"
+                                            Kind="Drag" />
+                                        <TextBlock
+                                            Margin="8,0,8,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            Text="{Binding Name}" />
+                                    </StackPanel>
+                                </materialDesign:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

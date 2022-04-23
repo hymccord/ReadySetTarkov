@@ -28,6 +28,7 @@
     <Separator/>
     <MenuItem Header="{Binding Status}" />
     <Separator/>
+    <MenuItem Header="Settings" Command="{Binding SettingsCommand}" />
     <MenuItem Header="Reset" Command="{Binding ResetCommand}" />
     <MenuItem Header="Exit" Command="{Binding ExitCommand}" />
 </ContextMenu>

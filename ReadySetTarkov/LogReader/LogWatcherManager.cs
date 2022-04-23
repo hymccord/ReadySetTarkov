@@ -43,27 +43,34 @@ internal class LogWatcherManager
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        await FindTarkovAsync(cancellationToken);
-        InitializeGameState();
-        // Even though the game has started, the latest logs folder could not be created yet
-        StartDirectoryWatcher();
-
-        _tray.SetStatus("Parsing logs...");
-
-        if (string.IsNullOrEmpty(_currentGameLogDir))
+        try
         {
-            throw new InvalidOperationException("Could not find tarkov's logs directory.");
-        }
+            await FindTarkovAsync(cancellationToken);
+            InitializeGameState();
+            // Even though the game has started, the latest logs folder could not be created yet
+            StartDirectoryWatcher();
 
-        await _logWatcher.WatchAsync(_currentGameLogDir, cancellationToken)
-            .ContinueWith((t) =>
+            _tray.SetStatus("Parsing logs...");
+
+            if (string.IsNullOrEmpty(_currentGameLogDir))
             {
-                _fileSystemWatcher!.EnableRaisingEvents = false;
-                _gameStateManager.SetGameState(GameState.None);
-            },
-            CancellationToken.None,
-            TaskContinuationOptions.None,
-            TaskScheduler.Default);
+                throw new InvalidOperationException("Could not find tarkov's logs directory.");
+            }
+
+            await _logWatcher.WatchAsync(_currentGameLogDir, cancellationToken)
+                .ContinueWith((t) =>
+                {
+                    _fileSystemWatcher!.EnableRaisingEvents = false;
+                    _gameStateManager.SetGameState(GameState.None);
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogDebug("Stopping log watchers");
+        }
     }
 
     private async Task FindTarkovAsync(CancellationToken cancellationToken = default)

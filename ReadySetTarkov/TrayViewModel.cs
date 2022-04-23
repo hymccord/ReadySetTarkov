@@ -79,10 +79,10 @@ public partial class TrayViewModel : ITray
 
     public void SetStatus(string text) => Status = text;
 
-    [ICommand]
+    [RelayCommand]
     private void Reset() => _ = _coreService.Value.ResetAsync();
 
-    [ICommand]
+    [RelayCommand]
     private void Exit() => _hostApplicationLifetime.StopApplication();
 
     [ObservableObject]
@@ -111,7 +111,7 @@ public partial class TrayViewModel : ITray
             }
         }
 
-        [ICommand]
+        [RelayCommand]
         private void SetTimeLeft() => IsChecked = !IsChecked;
     }
 }
