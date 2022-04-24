@@ -36,9 +36,9 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddSingleton<INotifyIcon, Tray>();
             _ = services.AddSingleton<ITray, TrayViewModel>();
             _ = services.AddSingleton<ISettingsProvider, SettingsProvider>();
-            _ = services.AddSingleton<ApplicationHandler>();
             _ = services.AddSingleton<ITarkovStateManager, TarkovStateManager>();
             _ = services.AddSingleton<LogWatcherManager>();
+            _ = services.AddSingleton<LogWatcher>();
 
             var joinableTaskContext = new JoinableTaskContext(Thread.CurrentThread, new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher, DispatcherPriority.Background));
             _ = services.AddSingleton(joinableTaskContext);
@@ -47,6 +47,10 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddTransient<INativeMethods, NativeMethods>();
             _ = services.AddTransient<IKernel32, Kernel32>();
             _ = services.AddTransient<IUser32, User32>();
+
+            // Tarkov Log Watchers
+            _ = services.AddSingleton<ILogFileHandlerProvider, ApplicationLogFileWatcherProvider>();
+            _ = services.AddTransient<ApplicationHandler>();
         });
 
         return hostBuilder;

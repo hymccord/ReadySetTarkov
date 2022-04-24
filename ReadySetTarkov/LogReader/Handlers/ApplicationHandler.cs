@@ -6,7 +6,20 @@ using ReadySetTarkov.Tarkov;
 
 namespace ReadySetTarkov.LogReader.Handlers;
 
-internal class ApplicationHandler
+internal class ApplicationLogFileWatcherProvider : ILogFileHandlerProvider
+{
+    private readonly ApplicationHandler _applicationHandler;
+
+    public ApplicationLogFileWatcherProvider(ApplicationHandler applicationHandler)
+    {
+        _applicationHandler = applicationHandler;
+        LogFileWatcherInfo = new LogWatcherInfo("application");
+    }
+    public ILogFileLineHandler LogFileLineHandler => _applicationHandler;
+    public LogWatcherInfo LogFileWatcherInfo { get; }
+}
+
+internal class ApplicationHandler : ILogFileLineHandler
 {
     private static readonly Regex s_gameRegex = new(@"^Game(?<action>\w+)");
     private static readonly Regex s_traceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)");
@@ -19,7 +32,7 @@ internal class ApplicationHandler
         _gameStateManager = gameStateManager;
     }
 
-    internal void Handle(LogLine line)
+    void ILogFileLineHandler.Handle(LogLine line)
     {
         if (string.IsNullOrEmpty(line.LineContent))
         {

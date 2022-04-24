@@ -4,24 +4,25 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using ReadySetTarkov.LogReader.Handlers;
+
 namespace ReadySetTarkov.LogReader;
 
 public class LogWatcher
 {
     internal const int UpdateDelay = 100;
+    private readonly Dictionary<string, ILogFileLineHandler> _handlers = new();
     private readonly List<LogFileWatcher> _logWatchers = new();
 
-    public LogWatcher(IEnumerable<LogWatcherInfo> logReaderInfos)
+    public LogWatcher(IEnumerable<ILogFileHandlerProvider> logFileWatcherProviders)
     {
-        _logWatchers.AddRange(logReaderInfos.Select(x => new LogFileWatcher(x)));
-        foreach (LogFileWatcher? watcher in _logWatchers)
+        foreach (ILogFileHandlerProvider? provider in logFileWatcherProviders)
         {
-            watcher.OnLogFileFound += (msg) => OnLogFileFound?.Invoke(msg);
+            _handlers[provider.LogFileWatcherInfo.Name] = provider.LogFileLineHandler;
         }
-    }
 
-    public event Action<List<LogLine>>? OnNewLines;
-    public event Action<string>? OnLogFileFound;
+        _logWatchers.AddRange(_handlers.Keys.Select(x => new LogFileWatcher(x)));
+    }
 
     public async Task WatchAsync(string logDirectory, CancellationToken cancellationToken = default)
     {
@@ -54,11 +55,22 @@ public class LogWatcher
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                OnNewLines?.Invoke(new List<LogLine>(newLines.Values.SelectMany(x => x)));
+                OnNewLines(new List<LogLine>(newLines.Values.SelectMany(x => x)));
             }
 
             newLines.Clear();
             await Task.Delay(UpdateDelay, cancellationToken);
+        }
+    }
+
+    private void OnNewLines(List<LogLine> lines)
+    {
+        foreach (LogLine? line in lines)
+        {
+            if (_handlers.TryGetValue(line.Namespace, out ILogFileLineHandler? handler))
+            {
+                handler.Handle(line);
+            }
         }
     }
 }

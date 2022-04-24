@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ReadySetTarkov.LogReader.Handlers;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
 
@@ -13,7 +11,6 @@ namespace ReadySetTarkov.LogReader;
 
 internal class LogWatcherManager
 {
-    private readonly ApplicationHandler _applicationLineHandler;
     private readonly LogWatcher _logWatcher;
     private readonly ITarkovGame _game;
     private readonly ITray _tray;
@@ -22,34 +19,21 @@ internal class LogWatcherManager
     private FileSystemWatcher? _fileSystemWatcher;
     private string? _currentGameLogDir;
 
-    public static LogWatcherInfo ApplicationLogWatcherInfo => new("application");
-
     public event EventHandler? LogDirectoryCreated;
 
     public LogWatcherManager(
-        ApplicationHandler applicationLineHandler,
+        LogWatcher logWatcher,
         ITarkovStateManager gameStateManager,
         ITarkovGame game,
         ITray tray,
         INativeMethods nativeMethods)
     {
-        _logWatcher = new LogWatcher(new[]
-        {
-            ApplicationLogWatcherInfo
-        });
-        _logWatcher.OnNewLines += OnNewLines;
-        _logWatcher.OnLogFileFound += OnLogFileFound;
+        _logWatcher = logWatcher;
         _game = game;
         _tray = tray;
 
         _gameStateManager = gameStateManager;
-        _applicationLineHandler = applicationLineHandler;
         _nativeMethods = nativeMethods;
-    }
-
-    private void OnLogFileFound(string msg)
-    {
-
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -105,20 +89,6 @@ internal class LogWatcherManager
 
         _game.GameDirectory = dir;
         _currentGameLogDir = GetNewestSubdirectory(_game.LogsDirectory!);
-    }
-
-    private void OnNewLines(List<LogLine> lines)
-    {
-        foreach (LogLine? line in lines)
-        {
-            //_game.GameTime.Time = line.Time;
-            switch (line.Namespace)
-            {
-                case "application":
-                    _applicationLineHandler.Handle(line);
-                    break;
-            }
-        }
     }
 
     private static string GetNewestSubdirectory(string directory) => Directory.GetDirectories(directory).Select(s => new DirectoryInfo(s)).OrderByDescending(di => di.CreationTime).First().FullName;

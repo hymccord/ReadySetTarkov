@@ -12,14 +12,14 @@ namespace ReadySetTarkov.LogReader;
 
 public class LogFileWatcher
 {
-    internal readonly LogWatcherInfo Info;
+    private readonly string _logName;
     private string? _filePath;
     private ConcurrentQueue<LogLine> _lines = new();
     private bool _logFileExists;
     private long _offset;
     private DateTime _startingPoint;
 
-    public LogFileWatcher(LogWatcherInfo info) => Info = info;
+    public LogFileWatcher(string name) => _logName = name;
 
     public event Action<string>? OnLogFileFound;
 
@@ -30,7 +30,7 @@ public class LogFileWatcher
             return;
         }
 
-        string[]? files = Directory.GetFiles(logDirectory, "*" + Info.Name + ".log");
+        string[]? files = Directory.GetFiles(logDirectory, $"*{_logName}.log");
         _filePath = Path.Combine(logDirectory, files[0]);
         _startingPoint = startingPoint;
         _offset = 0;
@@ -70,7 +70,7 @@ public class LogFileWatcher
                 if (!_logFileExists)
                 {
                     _logFileExists = true;
-                    OnLogFileFound?.Invoke(Info.Name);
+                    OnLogFileFound?.Invoke(_logName);
                 }
 
                 using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -87,7 +87,7 @@ public class LogFileWatcher
                 {
                     //if (!sr.EndOfStream)
                     //    break;
-                    var logLine = new LogLine(Info.Name, line);
+                    var logLine = new LogLine(_logName, line);
                     if (logLine.Time >= _startingPoint)
                     {
                         _lines.Enqueue(logLine);
@@ -136,7 +136,7 @@ public class LogFileWatcher
                         continue;
                     }
 
-                    var logLine = new LogLine(Info.Name, lines[i]);
+                    var logLine = new LogLine(_logName, lines[i]);
                     if (logLine.Time < _startingPoint)
                     {
                         int bytesUntilExpiredLogLine = lines[..(i + 1)].Sum(x => Encoding.UTF8.GetByteCount(x + Environment.NewLine));
