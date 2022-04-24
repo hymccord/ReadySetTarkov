@@ -36,8 +36,7 @@ public class LogFileWatcher
         _offset = 0;
         _lines = new ConcurrentQueue<LogLine>();
         _logFileExists = false;
-        _ = Task.Factory.StartNew(async ()
-            => await ReadLogFileAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        _ = Task.Factory.StartNew(async () => await ReadLogFileAsync(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
 
     public IEnumerable<LogLine> Collect()

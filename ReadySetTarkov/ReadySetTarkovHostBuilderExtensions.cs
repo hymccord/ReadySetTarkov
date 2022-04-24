@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Threading;
 
 using ReadySetTarkov.LogReader;
-using ReadySetTarkov.LogReader.Handlers;
+using ReadySetTarkov.LogReader.Handlers.Application;
+using ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
@@ -49,8 +50,13 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddTransient<IUser32, User32>();
 
             // Tarkov Log Watchers
-            _ = services.AddSingleton<ILogFileHandlerProvider, ApplicationLogFileWatcherProvider>();
+            _ = services.AddSingleton<ILogFileHandlerProvider, ApplicationLogFileHandlerProvider>();
             _ = services.AddTransient<ApplicationHandler>();
+            _ = services.AddSingleton<IApplicationLogLineContentHandler, GameLineHandler>();
+            _ = services.AddSingleton<IApplicationLogLineContentHandler, LocationLoadedLineHandler>();
+            _ = services.AddSingleton<IApplicationLogLineContentHandler, NetworkGameAbortedLineHandler>();
+            _ = services.AddSingleton<IApplicationLogLineContentHandler, SelectProfileLineHandler>();
+            _ = services.AddSingleton<IApplicationLogLineContentHandler, TraceNetworkLineHandler>();
         });
 
         return hostBuilder;
