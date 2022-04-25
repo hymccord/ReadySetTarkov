@@ -1,13 +1,17 @@
-﻿using ReadySetTarkov.Tarkov;
+﻿using Microsoft.Extensions.Logging;
+
+using ReadySetTarkov.Tarkov;
 
 namespace ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
 
 internal class SelectProfileLineHandler : IApplicationLogLineContentHandler
 {
+    private readonly ILogger<SelectProfileLineHandler> _logger;
     private readonly ITarkovStateManager _gameStateManager;
 
-    public SelectProfileLineHandler(ITarkovStateManager gameStateManager)
+    public SelectProfileLineHandler(ILogger<SelectProfileLineHandler> logger, ITarkovStateManager gameStateManager)
     {
+        _logger = logger;
         _gameStateManager = gameStateManager;
     }
 
@@ -18,6 +22,7 @@ internal class SelectProfileLineHandler : IApplicationLogLineContentHandler
             return false;
         }
 
+        _logger.LogTrace("Handling SelectProfile");
         _gameStateManager.SetGameState(GameState.Lobby);
 
         return true;

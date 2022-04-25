@@ -74,7 +74,6 @@ internal class Core : ICoreService
 
     private void InitializeWatcherTasks()
     {
-        Debug.WriteLine("Starting watchers");
         _logger.LogDebug("Starting watchers");
 
         CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_hostCancellationToken);

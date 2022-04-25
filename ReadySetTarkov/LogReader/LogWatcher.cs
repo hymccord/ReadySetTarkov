@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using ReadySetTarkov.LogReader.Handlers;
 
 namespace ReadySetTarkov.LogReader;
@@ -13,13 +15,19 @@ public class LogWatcher
     internal const int UpdateDelay = 100;
     private readonly Dictionary<string, ILogFileLineHandler> _handlers = new();
     private readonly List<LogFileWatcher> _logWatchers = new();
+    private readonly ILogger<LogWatcher> _logger;
 
-    public LogWatcher(IEnumerable<ILogFileHandlerProvider> logFileWatcherProviders)
+    public LogWatcher(ILogger<LogWatcher> logger, IEnumerable<ILogFileHandlerProvider> logFileWatcherProviders)
     {
+        _logger = logger;
+
         foreach (ILogFileHandlerProvider? provider in logFileWatcherProviders)
         {
             _handlers[provider.LogFileWatcherInfo.Name] = provider.LogFileLineHandler;
+            _logger.LogTrace("LogWatcher assigning {LogNamespace} to {Type}", provider.LogFileWatcherInfo.Name, provider.LogFileLineHandler.GetType());
         }
+
+        _logger.LogDebug("Watching {Count} namespaces. @{Namespaces}", _handlers.Count, _handlers.Keys);
 
         _logWatchers.AddRange(_handlers.Keys.Select(x => new LogFileWatcher(x)));
     }

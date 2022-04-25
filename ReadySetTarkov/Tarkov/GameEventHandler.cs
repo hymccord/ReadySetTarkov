@@ -23,10 +23,6 @@ internal class GameEventHandler : IHostedService
         _settingsProvider = settingsProvider;
         _tarkov = tarkov;
         _nativeMethods = nativeMethods;
-
-        _tarkov.GameStarting += GameStartingEventHandler;
-        _tarkov.GameStarted += GameStartedEventHandler;
-        _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
     }
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
@@ -46,8 +42,7 @@ internal class GameEventHandler : IHostedService
 
         if (_settingsProvider.Settings.SetTopMost && _settingsProvider.Settings.WithSecondsLeft > 0)
         {
-            // Going to assume 20 seconds, there's no log way to get the amount of time
-            // remaining. Maybe use the GameStarted to force window?
+            // Going to assume 20 seconds, there's no log way to get the amount of time remaining.
             await Task.Delay((20 * 1000) - (_settingsProvider.Settings.WithSecondsLeft * 1000))
                 .ContinueWith(t =>
                     _nativeMethods.BringTarkovToForeground(),
@@ -73,8 +68,22 @@ internal class GameEventHandler : IHostedService
         }
     }
 
-    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _tarkov.GameStarting += GameStartingEventHandler;
+        _tarkov.GameStarted += GameStartedEventHandler;
+        _tarkov.MatchmakingAborted += MatchmakingAbortedHandler;
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _tarkov.GameStarting -= GameStartingEventHandler;
+        _tarkov.GameStarted -= GameStartedEventHandler;
+        _tarkov.MatchmakingAborted -= MatchmakingAbortedHandler;
+
+        return Task.CompletedTask;
+    }
 }
 

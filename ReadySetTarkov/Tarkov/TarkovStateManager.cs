@@ -1,18 +1,23 @@
-﻿namespace ReadySetTarkov.Tarkov;
+﻿using Microsoft.Extensions.Logging;
+
+namespace ReadySetTarkov.Tarkov;
 
 internal class TarkovStateManager : ITarkovStateManager
 {
+    private readonly ILogger<TarkovStateManager> _logger;
     private readonly ITarkovGame _game;
     private readonly ITray _tray;
 
-    public TarkovStateManager(ITarkovGame game, ITray tray)
+    public TarkovStateManager(ILogger<TarkovStateManager> logger, ITarkovGame game, ITray tray)
     {
+        _logger = logger;
         _game = game;
         _tray = tray;
     }
 
     public void SetGameState(GameState gameState)
     {
+        _logger.LogTrace("Setting gamestate to {state}", gameState);
         _game.GameState = gameState;
 
         if (gameState is GameState.None or GameState.Lobby)
@@ -28,6 +33,7 @@ internal class TarkovStateManager : ITarkovStateManager
 
     public void SetMatchmakingState(MatchmakingState matchmakingState)
     {
+        _logger.LogTrace("Setting matchmaking state to {state}", matchmakingState);
         _game.MatchmakingState = matchmakingState;
 
         _tray.SetStatus(matchmakingState switch

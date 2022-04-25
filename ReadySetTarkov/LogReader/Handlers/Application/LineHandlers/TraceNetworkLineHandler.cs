@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
+using Microsoft.Extensions.Logging;
+
 using ReadySetTarkov.Tarkov;
 
 namespace ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
@@ -7,10 +9,12 @@ namespace ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
 internal class TraceNetworkLineHandler : IApplicationLogLineContentHandler
 {
     private static readonly Regex s_traceNetwork = new(@"^TRACE-NetworkGame(?<action>\w+)\s(?<arg>\w)", RegexOptions.Compiled);
+    private readonly ILogger<TraceNetworkLineHandler> _logger;
     private readonly ITarkovStateManager _gameStateManager;
 
-    public TraceNetworkLineHandler(ITarkovStateManager gameStateManager)
+    public TraceNetworkLineHandler(ILogger<TraceNetworkLineHandler> logger, ITarkovStateManager gameStateManager)
     {
+        _logger = logger;
         _gameStateManager = gameStateManager;
     }
 
@@ -22,8 +26,10 @@ internal class TraceNetworkLineHandler : IApplicationLogLineContentHandler
             return false;
         }
 
+        _logger.LogTrace("Handling TRACE-NetworkGame");
         string? action = match.Groups["action"].Value;
         string? arg = match.Groups["arg"].Value;
+        _logger.LogTrace("Regex Groups: @{Groups}", match.Groups.Values);
         bool handled = true;
         switch (action)
         {

@@ -34,7 +34,7 @@ public partial class App : Application
                 .MinimumLevelFromConfiguration(context.Configuration.GetSection("Logging:Loglevel"))
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
                 .MinimumLevel.Is(LogEventLevel.Verbose)
-                .WriteTo.Console(levelSwitch: logSettings.Console)
+                .WriteTo.Debug(levelSwitch: logSettings.Console)
                 .WriteTo.File(LogFilePath, levelSwitch: logSettings.File))
             .Build();
     }
@@ -89,10 +89,7 @@ public partial class App : Application
     {
 #if DEBUG
         await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
-#endif
         await Task.Delay(5000);
-
-#if DEBUG
         await _icon.CloseBalloonTipAsync();
 #endif
     }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
 
@@ -11,6 +13,7 @@ namespace ReadySetTarkov.LogReader;
 
 internal class LogWatcherManager
 {
+    private readonly ILogger<LogWatcherManager> _logger;
     private readonly LogWatcher _logWatcher;
     private readonly ITarkovGame _game;
     private readonly ITray _tray;
@@ -22,12 +25,14 @@ internal class LogWatcherManager
     public event EventHandler? LogDirectoryCreated;
 
     public LogWatcherManager(
+        ILogger<LogWatcherManager> logger,
         LogWatcher logWatcher,
         ITarkovStateManager gameStateManager,
         ITarkovGame game,
         ITray tray,
         INativeMethods nativeMethods)
     {
+        _logger = logger;
         _logWatcher = logWatcher;
         _game = game;
         _tray = tray;
@@ -89,6 +94,8 @@ internal class LogWatcherManager
 
         _game.GameDirectory = dir;
         _currentGameLogDir = GetNewestSubdirectory(_game.LogsDirectory!);
+
+        _logger.LogInformation("Using {GameLogDir} as latest game log directory", _currentGameLogDir);
     }
 
     private static string GetNewestSubdirectory(string directory) => Directory.GetDirectories(directory).Select(s => new DirectoryInfo(s)).OrderByDescending(di => di.CreationTime).First().FullName;
