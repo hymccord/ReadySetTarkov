@@ -51,9 +51,7 @@ public partial class App : Application
 
     private void RegisterExitEvents()
     {
-        AppDomain.CurrentDomain.ProcessExit += (s, e) => Exiting();
         Current.Exit += (s, e) => Exiting();
-        Current.SessionEnding += (s, e) => Exiting();
     }
 
     private void Exiting()

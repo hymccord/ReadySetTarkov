@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.Threading;
 using ReadySetTarkov.LogReader;
 using ReadySetTarkov.LogReader.Handlers.Application;
 using ReadySetTarkov.LogReader.Handlers.Application.LineHandlers;
+using ReadySetTarkov.Services;
 using ReadySetTarkov.Settings;
 using ReadySetTarkov.Tarkov;
 using ReadySetTarkov.Utility;
@@ -30,6 +31,7 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddSingleton<ICoreService, Core>();
             _ = services.AddSingleton<IHostedService>(s => s.GetRequiredService<ICoreService>());
             _ = services.AddHostedService<GameEventHandler>();
+            _ = services.AddHostedService<ShutdownHandler>();
 
             _ = services.AddSingleton<Game>();
             _ = services.AddSingleton<ITarkovGame>(s => s.GetRequiredService<Game>());
