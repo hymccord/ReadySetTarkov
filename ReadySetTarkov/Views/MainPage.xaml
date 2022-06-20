@@ -163,30 +163,32 @@
                                 Text="Triggers" />
                         </StackPanel>
                     </Grid>
-                    <ItemsControl
-                        d:ItemsSource="{d:SampleData ItemCount=5}"
-                        dd:DragDrop.IsDragSource="true"
-                        dd:DragDrop.UseDefaultDragAdorner="true"
-                        ItemsSource="{Binding DefaultTriggers}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <materialDesign:Card Margin="4">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon
-                                            Width="24"
-                                            Height="24"
-                                            VerticalAlignment="Center"
-                                            Kind="Drag" />
-                                        <TextBlock
-                                            Margin="8,0,8,0"
-                                            VerticalAlignment="Center"
-                                            FontSize="16"
-                                            Text="{Binding TriggerKey}" />
-                                    </StackPanel>
-                                </materialDesign:Card>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <ScrollViewer>
+                        <ItemsControl
+                            d:ItemsSource="{d:SampleData ItemCount=5}"
+                            dd:DragDrop.IsDragSource="true"
+                            dd:DragDrop.UseDefaultDragAdorner="true"
+                            ItemsSource="{Binding DefaultTriggers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <materialDesign:Card Margin="4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="24"
+                                                Height="24"
+                                                VerticalAlignment="Center"
+                                                Kind="Drag" />
+                                            <TextBlock
+                                                Margin="8,0,8,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="16"
+                                                Text="{Binding TriggerKey}" />
+                                        </StackPanel>
+                                    </materialDesign:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </DockPanel>
             </Border>
 
@@ -210,30 +212,32 @@
                                 Text="Actions" />
                         </StackPanel>
                     </Grid>
-                    <ItemsControl
-                        d:ItemsSource="{d:SampleData ItemCount=5}"
-                        dd:DragDrop.IsDragSource="true"
-                        dd:DragDrop.UseDefaultDragAdorner="true"
-                        ItemsSource="{Binding DefaultActions}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <materialDesign:Card Margin="4">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon
-                                            Width="24"
-                                            Height="24"
-                                            VerticalAlignment="Center"
-                                            Kind="Drag" />
-                                        <TextBlock
-                                            Margin="8,0,8,0"
-                                            VerticalAlignment="Center"
-                                            FontSize="16"
-                                            Text="{Binding Name}" />
-                                    </StackPanel>
-                                </materialDesign:Card>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <ScrollViewer>
+                        <ItemsControl
+                            d:ItemsSource="{d:SampleData ItemCount=5}"
+                            dd:DragDrop.IsDragSource="true"
+                            dd:DragDrop.UseDefaultDragAdorner="true"
+                            ItemsSource="{Binding DefaultActions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <materialDesign:Card Margin="4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="24"
+                                                Height="24"
+                                                VerticalAlignment="Center"
+                                                Kind="Drag" />
+                                            <TextBlock
+                                                Margin="8,0,8,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="16"
+                                                Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </materialDesign:Card>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </DockPanel>
             </Border>
         </Grid>

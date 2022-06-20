@@ -46,6 +46,12 @@ public partial class MainWindowViewModel
     }
 
     [RelayCommand]
+    private void NavigateToSettings()
+    {
+        NavigateTo(typeof(SettingsViewModel));
+    }
+
+    [RelayCommand]
     private void Loaded()
     {
         _navigationService.Navigated += OnNavigated;
@@ -73,7 +79,7 @@ public partial class MainWindowViewModel
         }
     }
 
-    private void OnNavigated(object sender, string viewModelName)
+    private void OnNavigated(object? sender, string? viewModelName)
     {
         NavItem? item = NavItems
                     .FirstOrDefault(i => viewModelName == i.ContentType.FullName);

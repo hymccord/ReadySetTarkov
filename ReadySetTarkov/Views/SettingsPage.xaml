@@ -10,5 +10,16 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Grid />
+    <StackPanel>
+        <CheckBox Content="Start minimized" />
+        <GroupBox Style="{StaticResource MaterialDesignHeaderedContentControl}">
+            <GroupBox.Header>
+                <CheckBox x:Name="cbShowTray" Content="Show tray icon" />
+            </GroupBox.Header>
+            <StackPanel Margin="10,0,0,0" IsEnabled="{Binding IsChecked, ElementName=cbShowTray}">
+                <CheckBox Content="Minimize to tray" />
+                <CheckBox Content="Close to tray" />
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
 </Page>

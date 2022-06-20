@@ -9,6 +9,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mde="https://spiegelp.github.io/MaterialDesignExtensions/winfx/xaml"
+    Title="Ready. Set. Tarkov!"
     Width="1100"
     Height="800"
     d:DataContext="{d:DesignInstance Type={x:Type domain:MainWindowViewModel}}"
@@ -20,7 +21,7 @@
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
     TextOptions.TextFormattingMode="Ideal"
     TextOptions.TextRenderingMode="Auto"
-    Title="Ready. Set. Tarkov!"
+    TitleBarIcon="Resources\RST_green.ico"
     mc:Ignorable="d">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -236,6 +237,7 @@
                             materialDesign:ButtonAssist.CornerRadius="16"
                             Background="{DynamicResource SecondaryHueMidBrush}"
                             BorderThickness="0"
+                            Command="{Binding NavigateToSettingsCommand}"
                             Foreground="{DynamicResource SecondaryHueMidBrushForeground}">
                             <materialDesign:PackIcon
                                 Width="24"
