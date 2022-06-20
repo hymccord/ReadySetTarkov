@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 
 using ReadySetTarkov.Settings;
 
-namespace ReadySetTarkov;
+namespace ReadySetTarkov.ViewModels;
 
 [ObservableObject]
 public partial class TrayViewModel : ITray

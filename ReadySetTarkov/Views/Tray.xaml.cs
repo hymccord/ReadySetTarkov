@@ -4,7 +4,7 @@ using Hardcodet.Wpf.TaskbarNotification;
 
 using Microsoft.VisualStudio.Threading;
 
-namespace ReadySetTarkov;
+namespace ReadySetTarkov.Views;
 
 /// <summary>
 /// Interaction logic for Tray.xaml

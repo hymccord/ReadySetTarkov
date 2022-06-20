@@ -1,14 +1,15 @@
 ﻿<mde:MaterialWindow
-    x:Class="ReadySetTarkov.MainWindow"
+    x:Class="ReadySetTarkov.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:domain="clr-namespace:ReadySetTarkov"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:local="clr-namespace:ReadySetTarkov"
+    xmlns:local="clr-namespace:ReadySetTarkov.Views"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mde="https://spiegelp.github.io/MaterialDesignExtensions/winfx/xaml"
+    xmlns:vm="clr-namespace:ReadySetTarkov.ViewModels"
     Title="Ready. Set. Tarkov!"
     Width="1100"
     Height="800"
@@ -56,7 +57,7 @@
                             Width="36"
                             Height="36"
                             DockPanel.Dock="Left"
-                            Source="Resources/RST_red.ico"
+                            Source="../Resources/RST_red.ico"
                             Stretch="Uniform" />
                         <TextBlock
                             Margin="10,0,10,0"
@@ -219,7 +220,7 @@
                                     </Style>
                                 </ListBox.ItemContainerStyle>
                                 <ListBox.Resources>
-                                    <DataTemplate DataType="{x:Type local:NavItem}">
+                                    <DataTemplate DataType="{x:Type vm:NavItem}">
                                         <TextBlock
                                             Text="{Binding Name}"
                                             TextAlignment="Center"

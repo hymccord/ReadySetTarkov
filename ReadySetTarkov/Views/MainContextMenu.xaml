@@ -1,0 +1,50 @@
+﻿<ContextMenu
+    x:Class="ReadySetTarkov.Views.MainContextMenu"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ReadySetTarkov.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:ReadySetTarkov.ViewModels"
+    d:DataContext="{d:DesignInstance Type=vm:TrayViewModel}"
+    mc:Ignorable="d">
+    <MenuItem
+        Header="Flash Taskbar"
+        IsCheckable="True"
+        IsChecked="{Binding FlashTaskbar}" />
+    <MenuItem
+        Header="Bring Window to Foreground"
+        IsChecked="{Binding SetTopMost}"
+        ItemsSource="{Binding TimeLeftOptions}">
+        <MenuItem.ItemTemplate>
+            <DataTemplate>
+                <RadioButton
+                    Content="{Binding Header}"
+                    GroupName="TimeLeft"
+                    IsChecked="{Binding IsChecked, Mode=TwoWay}" />
+            </DataTemplate>
+        </MenuItem.ItemTemplate>
+        <MenuItem.ItemContainerStyle>
+            <Style TargetType="MenuItem">
+                <Setter Property="Command" Value="{Binding SetTimeLeftCommand}" />
+                <Setter Property="IsCheckable" Value="False" />
+            </Style>
+        </MenuItem.ItemContainerStyle>
+    </MenuItem>
+    <MenuItem Header="Sounds">
+        <MenuItem
+            Header="Match Starting"
+            IsCheckable="True"
+            IsChecked="{Binding MatchStart}" />
+        <MenuItem
+            Header="Matchmaking Aborted"
+            IsCheckable="True"
+            IsChecked="{Binding MatchAbort}" />
+    </MenuItem>
+    <Separator />
+    <MenuItem Header="{Binding Status}" />
+    <Separator />
+    <MenuItem Command="{Binding SettingsCommand}" Header="Settings" />
+    <MenuItem Command="{Binding ResetCommand}" Header="Reset" />
+    <MenuItem Command="{Binding ExitCommand}" Header="Exit" />
+</ContextMenu>

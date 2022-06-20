@@ -2,8 +2,9 @@
 using System.Windows.Controls;
 
 using ReadySetTarkov.Contracts.Views;
+using ReadySetTarkov.ViewModels;
 
-namespace ReadySetTarkov;
+namespace ReadySetTarkov.Views;
 
 public partial class MainWindow : IShellWindow
 {

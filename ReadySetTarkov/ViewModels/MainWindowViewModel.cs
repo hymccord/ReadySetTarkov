@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Controls;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,9 +9,8 @@ using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
 
 using ReadySetTarkov.Contracts.Services;
-using ReadySetTarkov.ViewModels;
 
-namespace ReadySetTarkov;
+namespace ReadySetTarkov.ViewModels;
 
 [ObservableObject]
 public partial class MainWindowViewModel
