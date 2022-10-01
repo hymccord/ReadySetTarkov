@@ -6,11 +6,14 @@ Ready. Set. Tarkov! is an open source tool for the game Escape from Tarkov.
 
 ## What it does
 
-Ready. Set. Tarkov! reads the application logs provided by the EscapeFromTarkov.exe to let you know when your match is about start by flashing the Tarkov taskbar icon orange.
+Ready. Set. Tarkov! reads the application logs provided by the EscapeFromTarkov.exe to let you know when your match is about start by using a few different methods.
+
+1. Flash the taskbar icon orange (like Apex Legends does) at match countdown.
+2. Swap the game to the foreground right before spawn. Defaults to 3 sec before spawn, but it's configurable through the tray icon.
 
 ## Usage
 
-Download the latest [release](https://www.github.com/InKahootz/ReadySetTarkov/releases/latest/download/ReadySetTarkov.zip). Extract the zip. Run the executable.  
+Download the latest [release](https://www.github.com/InKahootz/ReadySetTarkov/releases/latest/download/ReadySetTarkov.zip). Extract the zip. Run the executable.
 You can confirm it's running by looking for the red icon in the tray. Right click to see options.
 
 Nothing is required as a prerequisite to run as it's a self-contained .NET 6 application. This is also why the executable is a bit on the larger side for a relatively simple app.
@@ -41,7 +44,6 @@ dotnet run -p ReadySetTarkov
 ### Possible Future Features
 
 - Sound customization
-- Swap foreground window on player spawn
 - Toast notifications
 
 ### Credits
