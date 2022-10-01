@@ -20,6 +20,8 @@
     <None Remove="MainContextMenu.xaml" />
     <None Remove="MainWindow.xaml" />
     <None Remove="Views\ActionsPage.xaml" />
+    <None Remove="Views\ConfigureActionControl.xaml" />
+    <None Remove="Views\ConfigureTriggerControl.xaml" />
     <None Remove="Views\MainPage.xaml" />
     <None Remove="Views\SettingsPage.xaml" />
     <None Remove="Views\TriggersPage.xaml" />

@@ -16,8 +16,6 @@ public partial class ActionsViewModel
     {
         ActionSource = new ActionSourceViewModel(defaultActions);
     }
-
-
 }
 
 public class ActionSourceViewModel
