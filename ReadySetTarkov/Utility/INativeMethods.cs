@@ -1,8 +1,10 @@
-﻿namespace ReadySetTarkov.Utility;
+﻿using System.Threading.Tasks;
+
+namespace ReadySetTarkov.Utility;
 
 public interface INativeMethods
 {
-    void BringTarkovToForeground();
+    Task BringTarkovToForegroundAsync();
     void FlashTarkov();
     string GetProcessFilename(uint processId);
     uint GetTarkovProcId();

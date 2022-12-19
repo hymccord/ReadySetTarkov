@@ -11,6 +11,7 @@ public interface IKernel32
 {
     SafeHandle OpenProcess(bool inheritHandle, uint processId);
     string QueryFullProcessImageName(SafeHandle process);
+    uint GetCurrentThreadId();
 }
 
 public class Kernel32 : IKernel32
@@ -38,4 +39,6 @@ public class Kernel32 : IKernel32
         Windows.Win32.Foundation.HANDLE handle = PInvoke.OpenProcess(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION, inherit, processId);
         return new Microsoft.Win32.SafeHandles.SafeProcessHandle(handle.Value, true);
     }
+
+    public uint GetCurrentThreadId() => PInvoke.GetCurrentThreadId();
 }

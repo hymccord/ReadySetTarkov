@@ -50,6 +50,8 @@ public static class ReadySetTarkovHostBuilderExtensions
             _ = services.AddTransient<INativeMethods, NativeMethods>();
             _ = services.AddTransient<IKernel32, Kernel32>();
             _ = services.AddTransient<IUser32, User32>();
+            _ = services.AddTransient<ISystemParametersInfo, SystemParameters>();
+            _ = services.AddTransient<IWindowForegrounding, WindowForegrounding>();
 
             // Tarkov Log Watchers
             _ = services.AddSingleton<ILogFileHandlerProvider, ApplicationLogFileHandlerProvider>();
@@ -66,7 +68,7 @@ public static class ReadySetTarkovHostBuilderExtensions
 
     public static LoggerConfiguration MinimumLevelFromConfiguration(this LoggerConfiguration builder, IConfiguration config)
     {
-        foreach ((string key, string value) in config.AsEnumerable())
+        foreach ((string key, string? value) in config.AsEnumerable())
         {
             int idx = key.LastIndexOf(':');
             string? eventName = key[(idx + 1)..];

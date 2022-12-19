@@ -1,23 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.Threading;
 
+using ReadySetTarkov.Settings;
+
 namespace ReadySetTarkov.Services;
 internal class ShutdownHandler : IHostedService
 {
+    private readonly ISettingsProvider _settingsProvider;
     private readonly JoinableTaskFactory _joinableTaskFactory;
 
-    public ShutdownHandler(IHostApplicationLifetime hostApplicationLifetime, JoinableTaskFactory joinableTaskFactory)
+    public ShutdownHandler(
+        IHostApplicationLifetime hostApplicationLifetime,
+        ISettingsProvider settingsProvider,
+        JoinableTaskFactory joinableTaskFactory)
     {
         _joinableTaskFactory = joinableTaskFactory;
-
+        _settingsProvider = settingsProvider;
         hostApplicationLifetime.ApplicationStopping.Register(static (c) => _ = (c as ShutdownHandler)!.ShutdownAppAsync(), this);
     }
 
@@ -26,6 +28,7 @@ internal class ShutdownHandler : IHostedService
 
     private async Task ShutdownAppAsync()
     {
+        _settingsProvider.Save();
         await _joinableTaskFactory.SwitchToMainThreadAsync();
 
         Application.Current.Shutdown();

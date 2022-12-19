@@ -7,8 +7,6 @@ using DryIoc.Microsoft.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using ReadySetTarkov.Settings;
-
 using Serilog;
 using Serilog.Events;
 
@@ -62,7 +60,6 @@ public partial class App : Application
         }
 
         _exitHandled = true;
-        _host.Services.GetRequiredService<ISettingsProvider>().Save();
     }
 
     private void InstallExceptionHandlers()
@@ -86,7 +83,7 @@ public partial class App : Application
 #pragma warning restore VSTHRD100, VSTHRD200
     {
 #if DEBUG
-        await _icon!.ShowBalloonTipAsync("ReadySetTarkove fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
+        await _icon!.ShowBalloonTipAsync("ReadySetTarkov fatal error", sources, Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Error);
         await Task.Delay(5000);
         await _icon.CloseBalloonTipAsync();
 #endif

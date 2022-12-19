@@ -10,8 +10,7 @@ using ReadySetTarkov.Settings;
 
 namespace ReadySetTarkov;
 
-[ObservableObject]
-public partial class TrayViewModel : ITray
+public partial class TrayViewModel : ObservableObject, ITray
 {
     private readonly ISettingsProvider _settingsProvider;
     private readonly Lazy<ICoreService> _coreService;
@@ -26,6 +25,7 @@ public partial class TrayViewModel : ITray
         _hostApplicationLifetime = hostApplicationLifetime;
         TimeLeftOptions = new ObservableCollection<TimeLeftOption>
         {
+            new TimeLeftOption(settingsProvider, -1),
             new TimeLeftOption(settingsProvider, 20),
             new TimeLeftOption(settingsProvider, 10),
             new TimeLeftOption(settingsProvider, 5),
@@ -46,11 +46,7 @@ public partial class TrayViewModel : ITray
 
     public bool Visible { get; set; }
 
-    public bool SetTopMost
-    {
-        get => _settingsProvider.Settings.SetTopMost;
-        set => _settingsProvider.Settings.SetTopMost = value;
-    }
+    public bool SetTopMost => _settingsProvider.Settings.WithSecondsLeft >= 0;
 
     public bool FlashTaskbar
     {
@@ -79,14 +75,13 @@ public partial class TrayViewModel : ITray
 
     public void SetStatus(string text) => Status = text;
 
-    [ICommand]
+    [RelayCommand]
     private void Reset() => _ = _coreService.Value.ResetAsync();
 
-    [ICommand]
+    [RelayCommand]
     private void Exit() => _hostApplicationLifetime.StopApplication();
 
-    [ObservableObject]
-    public partial class TimeLeftOption
+    public partial class TimeLeftOption : ObservableObject
     {
         private readonly ISettingsProvider _settingsProvider;
 
@@ -95,6 +90,11 @@ public partial class TrayViewModel : ITray
             _settingsProvider = settingsProvider;
             Header = $"{value}s left";
             Value = value;
+
+            if (value < 0)
+            {
+                Header += " (disabled)";
+            }
         }
 
         public string Header { get; }
@@ -111,7 +111,7 @@ public partial class TrayViewModel : ITray
             }
         }
 
-        [ICommand]
+        [RelayCommand]
         private void SetTimeLeft() => IsChecked = !IsChecked;
     }
 }

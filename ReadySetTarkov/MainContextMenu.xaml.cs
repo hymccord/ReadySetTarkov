@@ -6,4 +6,9 @@
 public partial class MainContextMenu
 {
     public MainContextMenu() => InitializeComponent();
+
+    private void MenuItem_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+
+    }
 }

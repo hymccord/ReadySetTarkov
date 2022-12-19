@@ -3,6 +3,8 @@ QueryFullProcessImageName
 OpenProcess
 
 // User32
+AttachThreadInput
+GetCurrentThreadId
 GetForegroundWindow
 SetForegroundWindow
 GetWindowLong
@@ -13,10 +15,14 @@ SetFocus
 SetActiveWindow
 GetClassName
 FlashWindow
+ShowWindow
 ShowWindowAsync
 FindWindow
 IsWindow
+IsIconic
 keybd_event
-GetWindowThreadProcessId
+SystemParametersInfo
+AllowSetForegroundWindow
+LockSetForegroundWindow
 
 SET_WINDOW_POS_FLAGS

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "ReadySetTarkov": {
+      "commandName": "Project"
+    },
+    "Desktop": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\Hank\\Desktop\\ReadySetTarkov\\ReadySetTarkov.exe",
+      "workingDirectory": "C:\\Users\\Hank\\Desktop\\ReadySetTarkov"
+    }
+  }
+}

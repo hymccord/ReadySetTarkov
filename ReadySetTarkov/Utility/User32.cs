@@ -5,11 +5,18 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace ReadySetTarkov.Utility;
 
-public class User32 : IUser32
+internal class User32 : IUser32
 {
-    public nint GetForegroundWindow() => PInvoke.GetForegroundWindow();
+    public User32(ISystemParametersInfo systemParametersInfo, IWindowForegrounding windowForegrounding)
+    {
+        SystemParametersInfo = systemParametersInfo;
+        WindowForegrounding = windowForegrounding;
+    }
 
-    public bool SetForegroundWindow(nint hWnd) => PInvoke.SetForegroundWindow((HWND)hWnd);
+    public ISystemParametersInfo SystemParametersInfo { get; }
+    public IWindowForegrounding WindowForegrounding { get; }
+
+    public void AttachThreadInput(uint idAttach, uint to, bool attach) => PInvoke.AttachThreadInput(idAttach, to, attach);
 
     public bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags) => PInvoke.SetWindowPos((HWND)hWnd, (HWND)hWndInsertAfter, x, y, cx, cy, (SET_WINDOW_POS_FLAGS)uFlags);
 
@@ -38,11 +45,14 @@ public class User32 : IUser32
 
     public bool IsWindow(nint hWnd) => PInvoke.IsWindow((HWND)hWnd);
 
-    public unsafe uint GetWindowThreadProcessId(nint hWnd)
+    public unsafe (uint threadId, uint processId) GetWindowThreadProcessId(nint hWnd)
     {
         uint processId = 0;
-        _ = PInvoke.GetWindowThreadProcessId((HWND)hWnd, &processId);
-
-        return processId;
+        var threadId = PInvoke.GetWindowThreadProcessId((HWND)hWnd, &processId);
+        return (threadId, processId);
     }
+
+    public bool ShowWindow(nint hWnd, SHOW_WINDOW_CMD nCmdShow) => PInvoke.ShowWindow((HWND)hWnd, nCmdShow);
+
+    public bool IsIconic(nint hWnd) => PInvoke.IsIconic((HWND)hWnd);
 }

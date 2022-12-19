@@ -40,22 +40,19 @@ internal class GameEventHandler : IHostedService
             player.Play();
         }
 
-        if (_settingsProvider.Settings.SetTopMost && _settingsProvider.Settings.WithSecondsLeft > 0)
+        if (_settingsProvider.Settings.WithSecondsLeft > 0)
         {
             // Going to assume 20 seconds, there's no log way to get the amount of time remaining.
-            await Task.Delay((20 * 1000) - (_settingsProvider.Settings.WithSecondsLeft * 1000))
-                .ContinueWith(t =>
-                    _nativeMethods.BringTarkovToForeground(),
-                    TaskScheduler.Default
-                    );
+            await Task.Delay((20 * 1000) - (_settingsProvider.Settings.WithSecondsLeft * 1000));
+            await _nativeMethods.BringTarkovToForegroundAsync();
         }
     }
 
     private void GameStartedEventHandler(object? sender, EventArgs e)
     {
-        if (_settingsProvider.Settings.SetTopMost && _settingsProvider.Settings.WithSecondsLeft == 0)
+        if (_settingsProvider.Settings.WithSecondsLeft == 0)
         {
-            _nativeMethods.BringTarkovToForeground();
+            _ = _nativeMethods.BringTarkovToForegroundAsync();
         }
     }
 
