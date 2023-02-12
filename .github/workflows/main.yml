@@ -5,7 +5,7 @@ on:
     branches: [ master ]
     paths-ignore:
       - '**.md'
-    tags: 
+    tags:
       - 'v*'
   pull_request:
     branches: [ master ]
@@ -18,10 +18,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Publish SelfContained
       run: dotnet publish -r win-x64 --self-contained -o publish-selfcontained -p:PublishSingleFile=true ReadySetTarkov\ReadySetTarkov.csproj
-    - name: Publish .NET 6 Desktop
+    - name: Publish .NET Desktop
       run: dotnet publish -r win-x64 --no-self-contained -o publish-desktop -p:PublishSingleFile=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
@@ -31,19 +31,19 @@ jobs:
     - name: 'Upload Artifact'
       uses: actions/upload-artifact@v2
       with:
-        name: ReadySetTarkov-NET6Desktop
+        name: ReadySetTarkov-NETDesktop
         path: publish-desktop
     - name: Zip
       run: Compress-Archive "publish-selfcontained\*" -DestinationPath "ReadySetTarkov.zip" -CompressionLevel Optimal
     - name: Zip
-      run: Compress-Archive "publish-desktop\*" -DestinationPath "ReadySetTarkov-NET6Desktop.zip" -CompressionLevel Optimal
+      run: Compress-Archive "publish-desktop\*" -DestinationPath "ReadySetTarkov-NETDesktop.zip" -CompressionLevel Optimal
     # Create a new release: create a tag, then 'git push origin <tagname>', wait for it to build
     - name: Create a new GitHub release if a new tag is pushed
       uses: softprops/action-gh-release@v0.1.14
       with:
         files: |
           ReadySetTarkov.zip
-          ReadySetTarkov-NET6Desktop.zip
+          ReadySetTarkov-NETDesktop.zip
       if: startsWith(github.ref, 'refs/tags/')
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
