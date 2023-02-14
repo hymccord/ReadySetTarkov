@@ -16,9 +16,9 @@ Ready. Set. Tarkov! reads the application logs provided by the EscapeFromTarkov.
 Download the latest [release](https://www.github.com/InKahootz/ReadySetTarkov/releases/latest/download/ReadySetTarkov.zip). Extract the zip. Run the executable.
 You can confirm it's running by looking for the red icon in the tray. Right click to see options.
 
-Nothing is required as a prerequisite to run as it's a self-contained .NET 6 application. This is also why the executable is a bit on the larger side for a relatively simple app.
+Nothing is required as a prerequisite to run as it's a self-contained .NET 7 application. This is also why the executable is a bit on the larger side for a relatively simple app.
 
-You can use the .NET 6 Desktop dependent app which is a lot smaller but you will first need to download the [.NET 6 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-6.0.0-windows-x64-installer).
+You can use the .NET 7 Desktop dependent app which is a lot smaller but you will first need to download the [.NET 7 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-7.0.2-windows-x64-installer).
 
 ## Concerns
 
