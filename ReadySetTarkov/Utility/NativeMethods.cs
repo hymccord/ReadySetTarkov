@@ -106,7 +106,7 @@ internal class NativeMethods : INativeMethods
         nint activeWindow = _user32.WindowForegrounding.GetForegroundWindow();
 
         (uint activeThread, _) = _user32.GetWindowThreadProcessId(activeWindow);
-        (uint windowThread, _) = _user32.GetWindowThreadProcessId(activeWindow);
+        (uint windowThread, _) = _user32.GetWindowThreadProcessId(window);
 
         if (currentThread != activeThread)
             _user32.AttachThreadInput(currentThread, activeThread, true);
