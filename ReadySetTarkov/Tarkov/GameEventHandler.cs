@@ -42,8 +42,8 @@ internal class GameEventHandler : IHostedService
 
         if (_settingsProvider.Settings.WithSecondsLeft > 0)
         {
-            // Going to assume 20 seconds, there's no log way to get the amount of time remaining.
-            await Task.Delay((20 * 1000) - (_settingsProvider.Settings.WithSecondsLeft * 1000));
+            // Going to assume 10 seconds, there's no log way to get the amount of time remaining.
+            await Task.Delay((10 * 1000) - (_settingsProvider.Settings.WithSecondsLeft * 1000));
             await _nativeMethods.BringTarkovToForegroundAsync();
         }
     }

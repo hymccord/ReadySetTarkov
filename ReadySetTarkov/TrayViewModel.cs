@@ -26,7 +26,6 @@ public partial class TrayViewModel : ObservableObject, ITray
         TimeLeftOptions = new ObservableCollection<TimeLeftOption>
         {
             new TimeLeftOption(settingsProvider, -1),
-            new TimeLeftOption(settingsProvider, 20),
             new TimeLeftOption(settingsProvider, 10),
             new TimeLeftOption(settingsProvider, 5),
             new TimeLeftOption(settingsProvider, 3),
