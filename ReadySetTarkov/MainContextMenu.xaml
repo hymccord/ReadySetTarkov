@@ -41,6 +41,7 @@
     </MenuItem>
     <Separator />
     <MenuItem Header="{Binding Status}" />
+    <MenuItem Header="{Binding Info}" />
     <Separator />
     <MenuItem Command="{Binding ResetCommand}" Header="Reset" />
     <MenuItem Command="{Binding ExitCommand}" Header="Exit" />

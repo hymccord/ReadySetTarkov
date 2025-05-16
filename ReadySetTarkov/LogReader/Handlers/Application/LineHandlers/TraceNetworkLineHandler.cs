@@ -49,6 +49,13 @@ internal class TraceNetworkLineHandler : IApplicationLogLineContentHandler
                         break;
                 }
                 break;
+            case "Create":
+                match = Regex.Match(lineContent, @"Sid: ([A-Z]{2}-[A-Z]*)");
+                if (match.Success)
+                {
+                    _gameStateManager.SetServer(match.Groups[1].Value);
+                }
+                break;
             default:
                 handled = false;
                 break;

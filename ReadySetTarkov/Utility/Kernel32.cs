@@ -24,20 +24,14 @@ public class Kernel32 : IKernel32
         int capacity = 2000;
         var builder = new StringBuilder(capacity);
         return !QueryFullProcessImageName(process.DangerousGetHandle(), 0, builder, ref capacity) ? string.Empty : builder.ToString();
-        //var capacity = 2000u;
-        //var lpExeName = new Windows.Win32.Foundation.PWSTR();
-        //var success = PInvoke.QueryFullProcessImageName(process, PROCESS_NAME_FORMAT.PROCESS_NAME_WIN32, lpExeName, ref capacity);
-
-        //return success.Value != 0
-        //    ? string.Empty
-        //    : lpExeName.ToString();
     }
 
-    public SafeHandle OpenProcess(bool inheritHandle, uint processId)
+    public unsafe SafeHandle OpenProcess(bool inheritHandle, uint processId)
     {
         var inherit = new Windows.Win32.Foundation.BOOL(inheritHandle);
         Windows.Win32.Foundation.HANDLE handle = PInvoke.OpenProcess(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION, inherit, processId);
-        return new Microsoft.Win32.SafeHandles.SafeProcessHandle(handle.Value, true);
+
+        return new Microsoft.Win32.SafeHandles.SafeProcessHandle((nint)handle.Value, true);
     }
 
     public uint GetCurrentThreadId() => PInvoke.GetCurrentThreadId();

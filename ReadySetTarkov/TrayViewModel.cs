@@ -15,8 +15,6 @@ public partial class TrayViewModel : ObservableObject, ITray
     private readonly ISettingsProvider _settingsProvider;
     private readonly Lazy<ICoreService> _coreService;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
-    private string _currentIcon = string.Empty;
-    private string _status = string.Empty;
 
     public TrayViewModel(ISettingsProvider settingsProvider, Lazy<ICoreService> coreService, IHostApplicationLifetime hostApplicationLifetime)
     {
@@ -37,11 +35,12 @@ public partial class TrayViewModel : ObservableObject, ITray
 
     public ObservableCollection<TimeLeftOption> TimeLeftOptions { get; }
 
-    public string CurrentIcon
-    {
-        get => _currentIcon;
-        set => SetProperty(ref _currentIcon, value);
-    }
+    [ObservableProperty]
+    private string _currentIcon = string.Empty;
+    [ObservableProperty]
+    private string _status = string.Empty;
+    [ObservableProperty]
+    private string _info = string.Empty;
 
     public bool Visible { get; set; }
 
@@ -64,15 +63,11 @@ public partial class TrayViewModel : ObservableObject, ITray
         set => _settingsProvider.Settings.Sounds.MatchAbort = value;
     }
 
-    public string Status
-    {
-        get => _status;
-        set => SetProperty(ref _status, value);
-    }
-
     public void SetIcon(string resource) => CurrentIcon = $"Resources/{resource}";
 
     public void SetStatus(string text) => Status = text;
+
+    public void SetInfo(string text) => Info = text;
 
     [RelayCommand]
     private void Reset() => _ = _coreService.Value.ResetAsync();

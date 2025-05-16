@@ -7,6 +7,12 @@
       "commandName": "Executable",
       "executablePath": "C:\\Users\\Hank\\Desktop\\ReadySetTarkov\\ReadySetTarkov.exe",
       "workingDirectory": "C:\\Users\\Hank\\Desktop\\ReadySetTarkov"
+    },
+    "ReadySetTarkov TRACE": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "Logging__LogLevel__System": "Trace"
+      }
     }
   }
 }

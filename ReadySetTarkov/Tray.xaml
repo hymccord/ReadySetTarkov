@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:ReadySetTarkov"
              xmlns:tb="http://www.hardcodet.net/taskbar"
              IconSource="{Binding CurrentIcon}"
+             ToolTipText="{Binding Info}"
              d:DataContext="{d:DesignInstance local:TrayViewModel}"
              mc:Ignorable="d">
     <tb:TaskbarIcon.ContextMenu>
