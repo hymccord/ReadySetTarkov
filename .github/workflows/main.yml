@@ -14,22 +14,22 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 7.0.x
+        global-json-file: global.json
     - name: Publish SelfContained
       run: dotnet publish -r win-x64 --self-contained -o publish-selfcontained -p:PublishSingleFile=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: Publish .NET Desktop
       run: dotnet publish -r win-x64 --no-self-contained -o publish-desktop -p:PublishSingleFile=true ReadySetTarkov\ReadySetTarkov.csproj
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ReadySetTarkov
         path: publish-selfcontained
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ReadySetTarkov-NETDesktop
         path: publish-desktop
