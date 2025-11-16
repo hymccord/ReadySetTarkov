@@ -30,7 +30,7 @@ public class LogFileWatcher
             return;
         }
 
-        string[]? files = Directory.GetFiles(logDirectory, $"*{_logName}.log");
+        string[]? files = Directory.GetFiles(logDirectory, $"*{_logName}*.log");
         _filePath = Path.Combine(logDirectory, files[0]);
         _startingPoint = startingPoint;
         _offset = 0;
